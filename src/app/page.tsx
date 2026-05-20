@@ -39,7 +39,6 @@ const navItems = [
   { id: "billing", label: "Billing", icon: CreditCard },
   { id: "profile", label: "Profile", icon: UserRound },
   { id: "onboarding", label: "Onboarding", icon: ShieldCheck },
-  { id: "auth", label: "Auth UI", icon: LockKeyhole },
 ] as const;
 
 type ViewId = (typeof navItems)[number]["id"];
@@ -152,7 +151,6 @@ export default function Home() {
             {activeView === "billing" ? <BillingView /> : null}
             {activeView === "profile" ? <ProfileView /> : null}
             {activeView === "onboarding" ? <OnboardingView /> : null}
-            {activeView === "auth" ? <AuthView /> : null}
           </div>
         </section>
       </div>
@@ -552,53 +550,6 @@ function OnboardingView() {
   );
 }
 
-function AuthView() {
-  const [activeAuth, setActiveAuth] = useState(authScreens[0].id);
-  const screen = authScreens.find((item) => item.id === activeAuth) ?? authScreens[0];
-
-  return (
-    <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
-      <Card className="p-5">
-        <h2 className="text-xl font-semibold">Authentication UI</h2>
-        <p className="mt-2 text-sm leading-6 text-[#64748b]">
-          Frontend screens for login, business registration, and password recovery. They are ready to wire to Joel&apos;s auth endpoints.
-        </p>
-        <div className="mt-5 grid gap-2">
-          {authScreens.map((item) => (
-            <Button
-              key={item.id}
-              tone={activeAuth === item.id ? "primary" : "secondary"}
-              className="justify-start"
-              onClick={() => setActiveAuth(item.id)}
-            >
-              {item.title}
-            </Button>
-          ))}
-        </div>
-      </Card>
-
-      <Card className="mx-auto w-full max-w-xl p-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#64748b]">Funza AI</p>
-        <h2 className="mt-2 text-2xl font-semibold">{screen.title}</h2>
-        <p className="mt-2 text-sm text-[#64748b]">{screen.subtitle}</p>
-        <div className="mt-6 space-y-4">
-          {screen.fields.map((field) => (
-            <TextInput
-              key={field}
-              label={field}
-              type={field.toLowerCase().includes("password") ? "password" : "text"}
-              placeholder={field}
-            />
-          ))}
-        </div>
-        <Button className="mt-6 w-full">{screen.primaryAction}</Button>
-        <p className="mt-4 text-center text-xs text-[#64748b]">
-          UI only. Backend authentication will be connected after API contracts are confirmed.
-        </p>
-      </Card>
-    </section>
-  );
-}
 
 function NotificationPanel() {
   return (
