@@ -67,7 +67,7 @@ const tiers: PricingTier[] = [
 
 export default function PricingPage() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-muted px-4 py-16">
+    <div className="flex min-h-svh flex-col items-center justify-center px-4 py-16">
       <div className="mb-12 text-center">
         <h1 className="text-4xl font-bold tracking-tight">
           Simple, transparent pricing
