@@ -10,7 +10,7 @@ export default async function Proxy(req: NextRequest) {
         headers: await headers(),
     });
 
-    const protectedRoutes = ["/dashboard", "/admin", "/pricing", "/"];
+    const protectedRoutes = ["/dashboard", "/admin", "/pricing"];
 
     if (!session && protectedRoutes.includes(pathname)) {
         return NextResponse.redirect(new URL('/login', req.url));
