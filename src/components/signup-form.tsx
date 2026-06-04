@@ -1,160 +1,65 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
-import { useForm, useWatch, type FieldPath } from "react-hook-form"
-import Link from "next/link"
-import {
-  Building,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Fingerprint,
-  Loader2,
-  User,
-  Users,
-} from "lucide-react"
-import toast from "react-hot-toast"
-import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { useEffect, useMemo, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import Link from "next/link";
+import { CheckCircle, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
+import { Field, FieldDescription, FieldGroup } from "@/components/ui/field";
+import { signUp, signInWithGoogle, useSession } from "@/lib/auth-client";
+
 import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { signUp, signInWithGoogle } from "@/lib/auth-client"
-
-type AccountType = "personal" | "sme" | "organization"
-
-type SignupFormValues = {
-  accountType: AccountType
-  name: string
-  email: string
-  password: string
-  confirmPassword: string
-  phone: string
-  country: string
-  businessName: string
-  registrationNumber: string
-  taxId: string
-  industry: string
-  website: string
-  teamSize: string
-  idType: string
-  idNumber: string
-  dateOfBirth: string
-  issuingCountry: string
-  residentialAddress: string
-  city: string
-  idDocument: FileList
-  proofOfAddress: FileList
-  businessDocument: FileList
-  selfie: FileList
-  kycConsent: boolean
-}
-
-const accountTypes: Array<{
-  value: AccountType
-  label: string
-  detail: string
-  icon: typeof User
-}> = [
-  {
-    value: "personal",
-    label: "Personal",
-    detail: "Single business owner",
-    icon: User,
-  },
-  {
-    value: "sme",
-    label: "SME",
-    detail: "Growing business team",
-    icon: Building,
-  },
-  {
-    value: "organization",
-    label: "Organization",
-    detail: "Company or institution",
-    icon: Users,
-  },
-]
-
-const steps = [
-  { title: "Account type", icon: User },
-  { title: "Profile", icon: Building },
-  { title: "KYC", icon: Fingerprint },
-  { title: "Review", icon: CheckCircle },
-]
-
-const baseFields: FieldPath<SignupFormValues>[] = [
-  "accountType",
-  "name",
-  "email",
-  "password",
-  "confirmPassword",
-  "phone",
-  "country",
-]
-
-const identityFields: FieldPath<SignupFormValues>[] = [
-  "idType",
-  "idNumber",
-  "dateOfBirth",
-  "issuingCountry",
-  "residentialAddress",
-  "city",
-  "idDocument",
-  "proofOfAddress",
-  "businessDocument",
-  "selfie",
-  "kycConsent",
-]
-
-function getProfileFields(
-  accountType: AccountType
-): FieldPath<SignupFormValues>[] {
-  if (accountType === "personal") {
-    return ["businessName", "industry"]
-  }
-
-  return [
-    "businessName",
-    "registrationNumber",
-    "taxId",
-    "industry",
-    "teamSize",
-  ]
-}
-
-function getBusinessDocumentLabel(accountType: AccountType) {
-  if (accountType === "personal") return "Business ownership proof"
-  if (accountType === "sme") return "Business registration document"
-  return "Organization registration document"
-}
-
-function getAccountTypeLabel(accountType: AccountType) {
-  return accountTypes.find((type) => type.value === accountType)?.label ?? ""
-}
-
-function hasFile(files?: FileList) {
-  return Boolean(files?.length)
-}
+  type SignupFormValues,
+  type AccountType,
+  type DocumentApprovalStatus,
+} from "./signup/types";
+import {
+  accountTypes,
+  steps,
+  baseFields,
+  identityFields,
+  getProfileFields,
+  getBusinessDocumentLabel,
+} from "./signup/constants";
+import { AccountTypeStep } from "./signup/account-type-step";
+import { ProfileStep } from "./signup/profile-step";
+import { KYCStep } from "./signup/kyc-step";
+import { ReviewStep } from "./signup/review-step";
+import {
+  uploadGovernmentId,
+  uploadSelfie,
+  uploadBusinessDoc,
+  uploadProofAddress,
+} from "./signup/upload-handlers";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<typeof Card>) {
-  const router = useRouter()
-  const [step, setStep] = useState(0)
+  const router = useRouter();
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [step, setStep] = useState(0);
+  const [documentApproval, setDocumentApproval] = useState<{
+    idDocument: DocumentApprovalStatus;
+    proofOfAddress: DocumentApprovalStatus;
+    businessDocument: DocumentApprovalStatus;
+    selfie: DocumentApprovalStatus;
+  }>({
+    idDocument: "pending",
+    proofOfAddress: "pending",
+    businessDocument: "pending",
+    selfie: "pending",
+  });
   const {
     register,
     handleSubmit,
@@ -172,88 +77,445 @@ export function SignupForm({
       kycConsent: false,
     },
     mode: "onTouched",
-  })
+  });
 
-  const accountType =
-    useWatch({ control, name: "accountType" }) ?? "personal"
-  const password = useWatch({ control, name: "password" }) ?? ""
-  const businessDocumentLabel = getBusinessDocumentLabel(accountType)
+  const accountType = useWatch({ control, name: "accountType" }) ?? "personal";
+  const password = useWatch({ control, name: "password" }) ?? "";
+  const formValues = useWatch({ control });
+  const businessDocumentLabel = getBusinessDocumentLabel(accountType);
   const selectedAccountType = useMemo(
     () => accountTypes.find((type) => type.value === accountType),
-    [accountType]
-  )
+    [accountType],
+  );
+
+  const { data: session } = useSession();
+
+  // Save draft on form changes (debounced)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (step > 0 && session?.user?.id) {
+        saveDraft();
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [accountType, password, step, session]);
+
+  useEffect(() => {
+    async function loadDraft() {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/api/kyc/draft`;
+
+      console.log("Loading draft from:", url);
+
+      try {
+        const res = await fetch(url, {
+          credentials: "include",
+        });
+
+        console.log("Response status:", res.status);
+
+        const text = await res.text();
+
+        console.log("Response body:", text);
+
+        const result = text ? JSON.parse(text) : null;
+
+        if (!result?.data) {
+          console.log("No draft found");
+          return;
+        }
+
+        console.log("Draft data to restore:", result.data);
+
+        Object.entries(result.data).forEach(([key, value]) => {
+          console.log(`Setting ${key} to:`, value);
+          setValue(key as any, value as any);
+        });
+
+        // Restore step position if saved
+        if (result.data.step !== undefined) {
+          setStep(result.data.step);
+        }
+      } catch (error) {
+        console.error("Failed to load draft:", error);
+        console.error("URL was:", url);
+      }
+    }
+
+    loadDraft();
+  }, [setValue]);
+
+  async function saveDraft() {
+    if (!session?.user?.id) {
+      console.log("[KYC] No user session, skipping draft save");
+      return;
+    }
+
+    try {
+      const data = getValues();
+
+      // Exclude sensitive fields from draft
+      const {
+        password,
+        confirmPassword,
+        idDocument,
+        proofOfAddress,
+        businessDocument,
+        selfie,
+        ...safeData
+      } = data;
+
+      const draftData = {
+        ...safeData,
+        step,
+        userId: session.user.id,
+      };
+
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/api/kyc/draft`;
+
+      console.log("[KYC] Saving draft to:", url);
+      console.log("[KYC] Payload:", draftData);
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(draftData),
+        credentials: "include",
+      });
+
+      const responseText = await res.text();
+
+      console.log("[KYC] Response status:", res.status);
+      console.log("[KYC] Response body:", responseText);
+
+      if (!res.ok) {
+        throw new Error(`Failed to save draft: ${res.status}`);
+      }
+
+      console.log("[KYC] Draft saved successfully");
+    } catch (error) {
+      console.error("[KYC] Error saving draft:", error);
+    }
+  }
 
   async function goNext() {
-    const fields: FieldPath<SignupFormValues>[] =
-      step === 0
-        ? ["accountType"]
-        : step === 1
-          ? [...baseFields, ...getProfileFields(accountType)]
-          : identityFields
-
-    const isValid = await trigger(fields)
-    if (!isValid) {
-      toast.error("Please complete the highlighted fields.")
-      return
+    // STEP 0 → ACCOUNT TYPE
+    if (step === 0) {
+      const isValid = await trigger(["accountType"]);
+      if (!isValid) return;
+      setStep(1);
+      return;
     }
-    setStep((current) => Math.min(current + 1, steps.length - 1))
+
+    // STEP 1 → CREATE ACCOUNT
+    if (step === 1) {
+      const isValid = await trigger([
+        ...baseFields,
+        ...getProfileFields(accountType),
+      ]);
+
+      if (!isValid) {
+        toast.error("Please complete required fields.");
+        return;
+      }
+
+      setIsCreatingAccount(true);
+
+      const data = getValues();
+
+      const { error, data: result } = await signUp.email({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      });
+
+      setIsCreatingAccount(false);
+
+      if (error) {
+        toast.error(error.message ?? "Signup failed");
+        return;
+      }
+
+      if (!result?.user?.id) {
+        toast.error("User creation failed");
+        return;
+      }
+      setStep(2);
+      await saveDraft();
+      return;
+    }
+
+    // STEP 2 → KYC VALIDATION ONLY
+    if (step === 2) {
+      const isValid = await trigger(identityFields);
+
+      if (!isValid) {
+        toast.error("Please complete KYC fields.");
+        return;
+      }
+
+      // Check if all documents are approved
+      const requiredDocs = ["idDocument", "proofOfAddress", "selfie"];
+      if (accountType !== "personal") {
+        requiredDocs.push("businessDocument");
+      }
+
+      const allApproved = requiredDocs.every(
+        (doc) =>
+          documentApproval[doc as keyof typeof documentApproval] === "approved",
+      );
+
+      if (!allApproved) {
+        const pendingDocs = requiredDocs.filter(
+          (doc) =>
+            documentApproval[doc as keyof typeof documentApproval] !==
+            "approved",
+        );
+        toast.error(
+          `Please wait for all documents to be approved. Pending: ${pendingDocs.join(", ")}`,
+        );
+        return;
+      }
+
+      setStep(3);
+      await saveDraft();
+    }
   }
 
   function goBack() {
-    setStep((current) => Math.max(current - 1, 0))
+    setStep((current) => Math.max(current - 1, 0));
   }
 
-  async function onSubmit(data: SignupFormValues) {
-    const isValid = await trigger([
-      ...baseFields,
-      ...getProfileFields(data.accountType),
-      ...identityFields,
-    ])
+  const handleGovernmentIdUpload = async (file: File) => {
+    setDocumentApproval((prev) => ({ ...prev, idDocument: "uploading" }));
 
-    if (!isValid) {
-      toast.error("Complete your KYC verification before creating an account.")
-      return
+    try {
+      const result = await uploadGovernmentId(file, session?.user?.id || "");
+      console.log("Government ID response:", result);
+      if (result.success) {
+        setValue("idNumber", result.extractedData.id_number);
+        setValue("dateOfBirth", result.extractedData.date_of_birth);
+
+        if (result.extractedData.full_name) {
+          setValue("name", result.extractedData.full_name);
+        }
+
+        setDocumentApproval((prev) => ({ ...prev, idDocument: "approved" }));
+        toast.success("Ghana Card verified and approved");
+      } else {
+        setDocumentApproval((prev) => ({ ...prev, idDocument: "pending" }));
+        toast.error("Verification pending approval");
+      }
+    } catch (error) {
+      setDocumentApproval((prev) => ({ ...prev, idDocument: "rejected" }));
+      toast.error(error instanceof Error ? error.message : "Upload failed");
+      console.error("UPLOAD FAILED", error);
+    }
+  };
+
+  const handleSelfieUpload = async (file: File) => {
+    setDocumentApproval((prev) => ({ ...prev, selfie: "uploading" }));
+
+    try {
+      const result = await uploadSelfie(file, session?.user?.id || "");
+
+      console.log("🤳 FULL Selfie Response:", result);
+      console.log("📦 result.data:", result?.data);
+
+      if (!result.success) {
+        console.log("❌ Upload failed:", result?.error);
+
+        setDocumentApproval((prev) => ({ ...prev, selfie: "rejected" }));
+        toast.error(result?.error || "Upload failed");
+        return;
+      }
+
+      const status = result?.data?.status;
+
+      console.log("📊 Extracted status:", status);
+
+      if (status === "approved") {
+        console.log("✅ APPROVED");
+
+        setDocumentApproval((prev) => ({ ...prev, selfie: "approved" }));
+        toast.success("Selfie verified and approved");
+      } else if (status === "pending") {
+        console.log("⏳ PENDING");
+
+        setDocumentApproval((prev) => ({ ...prev, selfie: "pending" }));
+        toast("Selfie pending approval");
+      } else {
+        console.log("❌ REJECTED:", status);
+
+        setDocumentApproval((prev) => ({ ...prev, selfie: "rejected" }));
+        toast.error("Selfie rejected");
+      }
+    } catch (error) {
+      console.error("💥 Upload error:", error);
+
+      setDocumentApproval((prev) => ({ ...prev, selfie: "rejected" }));
+      toast.error(error instanceof Error ? error.message : "Upload failed");
+    }
+  };
+
+  const handleBusinessDocUpload = async (file: File) => {
+    setDocumentApproval((prev) => ({
+      ...prev,
+      businessDocument: "uploading",
+    }));
+
+    try {
+      const result = await uploadBusinessDoc(file, session?.user?.id || "");
+
+      console.log("📄 Business Doc FULL response:", result);
+      console.log("📦 verification object:", result?.verification);
+      console.log("📊 status:", result?.verification?.status);
+
+      if (!result.success) {
+        setDocumentApproval((prev) => ({
+          ...prev,
+          businessDocument: "rejected",
+        }));
+        toast.error(result?.error || "Upload failed");
+        return;
+      }
+
+      const status = result?.verification?.status;
+
+      if (status === "approved") {
+        setDocumentApproval((prev) => ({
+          ...prev,
+          businessDocument: "approved",
+        }));
+        toast.success("Business document verified and approved");
+      } else if (status === "pending") {
+        setDocumentApproval((prev) => ({
+          ...prev,
+          businessDocument: "pending",
+        }));
+        toast("Business document pending approval");
+      } else {
+        setDocumentApproval((prev) => ({
+          ...prev,
+          businessDocument: "rejected",
+        }));
+        toast.error("Business document rejected");
+      }
+    } catch (error) {
+      console.error("💥 Business doc upload error:", error);
+
+      setDocumentApproval((prev) => ({
+        ...prev,
+        businessDocument: "rejected",
+      }));
+
+      toast.error(error instanceof Error ? error.message : "Upload failed");
+    }
+  };
+
+  const handleProofAddressUpload = async (file: File) => {
+    setDocumentApproval((prev) => ({
+      ...prev,
+      proofOfAddress: "uploading",
+    }));
+
+    try {
+      const result = await uploadProofAddress(file, session?.user?.id || "");
+
+      console.log("📄 Proof of Address response:", result);
+
+      if (!result.success) {
+        setDocumentApproval((prev) => ({
+          ...prev,
+          proofOfAddress: "rejected",
+        }));
+        toast.error(result?.message || "Upload failed");
+        return;
+      }
+
+      const status = result?.data?.status;
+
+      console.log("📊 Status:", status);
+
+      if (status === "approved") {
+        setDocumentApproval((prev) => ({
+          ...prev,
+          proofOfAddress: "approved",
+        }));
+        toast.success("Proof of address verified and approved");
+      } else if (status === "pending") {
+        setDocumentApproval((prev) => ({
+          ...prev,
+          proofOfAddress: "pending",
+        }));
+        toast("Proof of address pending approval");
+      } else {
+        setDocumentApproval((prev) => ({
+          ...prev,
+          proofOfAddress: "rejected",
+        }));
+        toast.error("Proof of address rejected");
+      }
+    } catch (error) {
+      setDocumentApproval((prev) => ({
+        ...prev,
+        proofOfAddress: "rejected",
+      }));
+
+      toast.error(error instanceof Error ? error.message : "Upload failed");
+      console.error("UPLOAD FAILED", error);
+    }
+  };
+  async function submitKYC() {
+    const requiredDocs = ["idDocument", "proofOfAddress", "selfie"];
+
+    if (accountType !== "personal") {
+      requiredDocs.push("businessDocument");
     }
 
-    const signupPayload = {
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      accountType: data.accountType,
-      phone: data.phone,
-      country: data.country,
-      businessName: data.businessName,
-      registrationNumber: data.registrationNumber,
-      taxId: data.taxId,
-      industry: data.industry,
-      website: data.website,
-      teamSize: data.teamSize,
-      kycStatus: "submitted",
-      kycProfile: {
-        idType: data.idType,
-        idNumber: data.idNumber,
-        dateOfBirth: data.dateOfBirth,
-        issuingCountry: data.issuingCountry,
-        residentialAddress: data.residentialAddress,
-        city: data.city,
-        documents: {
-          idDocument: data.idDocument?.[0]?.name,
-          proofOfAddress: data.proofOfAddress?.[0]?.name,
-          businessDocument: data.businessDocument?.[0]?.name,
-          selfie: data.selfie?.[0]?.name,
-        },
-      },
+    const allApproved = requiredDocs.every(
+      (doc) =>
+        documentApproval[doc as keyof typeof documentApproval] === "approved",
+    );
+
+    if (!allApproved) {
+      toast.error("Please complete and approve all KYC documents");
+      return;
     }
 
-    const { error } = await signUp.email(signupPayload)
-    if (error) {
-      toast.error(error.message ?? "Could not create account.")
-      return
+    try {
+      setIsCreatingAccount(true);
+
+      const signupPayload = {
+        email: getValues("email"),
+        password: getValues("password"),
+        name: getValues("name"),
+      };
+
+      const { error } = await signUp.email(signupPayload);
+
+      if (error) {
+        toast.error(error.message ?? "Could not create account.");
+        return;
+      }
+
+      toast.success("Account created. Check your email for verification.");
+
+      router.push(
+        `/verify-email?email=${encodeURIComponent(signupPayload.email)}`,
+      );
+    } catch (error) {
+      console.error("KYC submit error:", error);
+
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create account",
+      );
+    } finally {
+      setIsCreatingAccount(false);
     }
-    toast.success("Account created. Check your email for verification.")
-    router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
   }
-
   return (
     <Card className={cn("gap-6 py-7", className)} {...props}>
       <CardHeader className="space-y-4 px-6 sm:px-8">
@@ -268,9 +530,9 @@ export function SignupForm({
         </div>
         <div className="grid grid-cols-4 gap-2">
           {steps.map((item, index) => {
-            const StepIcon = item.icon
-            const isActive = index === step
-            const isDone = index < step
+            const StepIcon = item.icon;
+            const isActive = index === step;
+            const isDone = index < step;
 
             return (
               <div
@@ -281,722 +543,59 @@ export function SignupForm({
                     ? "border-foreground bg-foreground text-background"
                     : isDone
                       ? "border-[#16a34a] bg-[#e8f6ef] text-[#047857]"
-                      : "border-border bg-muted/40 text-muted-foreground"
+                      : "border-border bg-muted/40 text-muted-foreground",
                 )}
               >
                 <StepIcon className="size-4" />
                 <span className="hidden sm:inline">{item.title}</span>
               </div>
-            )
+            );
           })}
         </div>
       </CardHeader>
       <CardContent className="px-6 sm:px-8">
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={(e) => e.preventDefault()}>
           <FieldGroup className="gap-6">
             {step === 0 && (
-              <section className="space-y-4">
-                <div>
-                  <h2 className="text-base font-semibold">
-                    Registering category
-                  </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    This determines the profile and verification details needed
-                    for your workspace.
-                  </p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {accountTypes.map((type) => {
-                    const TypeIcon = type.icon
-                    const selected = accountType === type.value
-
-                    return (
-                      <button
-                        key={type.value}
-                        type="button"
-                        onClick={() =>
-                          setValue("accountType", type.value, {
-                            shouldDirty: true,
-                            shouldValidate: true,
-                          })
-                        }
-                        className={cn(
-                          "flex min-h-24 items-start gap-3 rounded-md border p-4 text-left transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:outline-none",
-                          selected
-                            ? "border-foreground bg-foreground text-background"
-                            : "border-border bg-input/20 hover:bg-input/40"
-                        )}
-                        aria-pressed={selected}
-                      >
-                        <span
-                          className={cn(
-                            "grid size-10 shrink-0 place-items-center rounded-md",
-                            selected
-                              ? "bg-background/15"
-                              : "bg-background ring-1 ring-border"
-                          )}
-                        >
-                          <TypeIcon className="size-5" />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block text-sm font-semibold">
-                            {type.label}
-                          </span>
-                          <span
-                            className={cn(
-                              "mt-1 block text-xs leading-5",
-                              selected
-                                ? "text-background/75"
-                                : "text-muted-foreground"
-                            )}
-                          >
-                            {type.detail}
-                          </span>
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-                <input type="hidden" {...register("accountType")} />
-                {errors.accountType && (
-                  <FieldDescription className="text-destructive">
-                    {errors.accountType.message}
-                  </FieldDescription>
-                )}
-              </section>
+              <AccountTypeStep
+                accountType={accountType}
+                setValue={setValue}
+                errors={errors}
+              />
             )}
 
             {step === 1 && (
-              <section className="space-y-5">
-                <div className="flex items-center gap-3 rounded-md border border-border bg-muted/30 p-3">
-                  {selectedAccountType ? (
-                    <selectedAccountType.icon className="size-5 shrink-0" />
-                  ) : null}
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold">
-                      {getAccountTypeLabel(accountType)} registration
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {selectedAccountType?.detail}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field>
-                    <FieldLabel
-                      htmlFor="name"
-                      className="text-sm font-semibold"
-                    >
-                      Legal full name
-                    </FieldLabel>
-                    <Input
-                      id="name"
-                      type="text"
-                      placeholder="John Doe"
-                      autoComplete="name"
-                      aria-invalid={Boolean(errors.name)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("name", {
-                        required: "Legal full name is required",
-                      })}
-                    />
-                    {errors.name && (
-                      <FieldDescription className="text-destructive">
-                        {errors.name.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="email"
-                      className="text-sm font-semibold"
-                    >
-                      Email
-                    </FieldLabel>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="m@example.com"
-                      autoComplete="email"
-                      aria-invalid={Boolean(errors.email)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("email", {
-                        required: "Email is required",
-                        pattern: {
-                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                          message: "Enter a valid email address",
-                        },
-                      })}
-                    />
-                    {errors.email && (
-                      <FieldDescription className="text-destructive">
-                        {errors.email.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="phone"
-                      className="text-sm font-semibold"
-                    >
-                      Phone number
-                    </FieldLabel>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+233 20 000 0000"
-                      autoComplete="tel"
-                      aria-invalid={Boolean(errors.phone)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("phone", {
-                        required: "Phone number is required",
-                      })}
-                    />
-                    {errors.phone && (
-                      <FieldDescription className="text-destructive">
-                        {errors.phone.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="country"
-                      className="text-sm font-semibold"
-                    >
-                      Country
-                    </FieldLabel>
-                    <Input
-                      id="country"
-                      type="text"
-                      placeholder="Ghana"
-                      autoComplete="country-name"
-                      aria-invalid={Boolean(errors.country)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("country", {
-                        required: "Country is required",
-                      })}
-                    />
-                    {errors.country && (
-                      <FieldDescription className="text-destructive">
-                        {errors.country.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="password"
-                      className="text-sm font-semibold"
-                    >
-                      Password
-                    </FieldLabel>
-                    <Input
-                      id="password"
-                      type="password"
-                      autoComplete="new-password"
-                      aria-invalid={Boolean(errors.password)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("password", {
-                        required: "Password is required",
-                        minLength: {
-                          value: 8,
-                          message: "Must be at least 8 characters long",
-                        },
-                      })}
-                    />
-                    {errors.password ? (
-                      <FieldDescription className="text-destructive">
-                        {errors.password.message}
-                      </FieldDescription>
-                    ) : (
-                      <FieldDescription>
-                        Must be at least 8 characters long.
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="confirm-password"
-                      className="text-sm font-semibold"
-                    >
-                      Confirm password
-                    </FieldLabel>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      autoComplete="new-password"
-                      aria-invalid={Boolean(errors.confirmPassword)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("confirmPassword", {
-                        required: "Please confirm your password",
-                        validate: (value) =>
-                          value === password || "Passwords do not match",
-                      })}
-                    />
-                    {errors.confirmPassword && (
-                      <FieldDescription className="text-destructive">
-                        {errors.confirmPassword.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field>
-                    <FieldLabel
-                      htmlFor="business-name"
-                      className="text-sm font-semibold"
-                    >
-                      {accountType === "personal"
-                        ? "Business or trade name"
-                        : "Registered name"}
-                    </FieldLabel>
-                    <Input
-                      id="business-name"
-                      type="text"
-                      placeholder="Funza Retail"
-                      aria-invalid={Boolean(errors.businessName)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("businessName", {
-                        required: "Business name is required",
-                      })}
-                    />
-                    {errors.businessName && (
-                      <FieldDescription className="text-destructive">
-                        {errors.businessName.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="industry"
-                      className="text-sm font-semibold"
-                    >
-                      Industry
-                    </FieldLabel>
-                    <Input
-                      id="industry"
-                      type="text"
-                      placeholder="Retail"
-                      aria-invalid={Boolean(errors.industry)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("industry", {
-                        required: "Industry is required",
-                      })}
-                    />
-                    {errors.industry && (
-                      <FieldDescription className="text-destructive">
-                        {errors.industry.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  {accountType !== "personal" && (
-                    <>
-                      <Field>
-                        <FieldLabel
-                          htmlFor="registration-number"
-                          className="text-sm font-semibold"
-                        >
-                          Registration number
-                        </FieldLabel>
-                        <Input
-                          id="registration-number"
-                          type="text"
-                          placeholder="CS000000000"
-                          aria-invalid={Boolean(errors.registrationNumber)}
-                          className="h-11 px-3 text-sm md:text-sm"
-                          {...register("registrationNumber", {
-                            required: "Registration number is required",
-                          })}
-                        />
-                        {errors.registrationNumber && (
-                          <FieldDescription className="text-destructive">
-                            {errors.registrationNumber.message}
-                          </FieldDescription>
-                        )}
-                      </Field>
-
-                      <Field>
-                        <FieldLabel
-                          htmlFor="tax-id"
-                          className="text-sm font-semibold"
-                        >
-                          Tax ID
-                        </FieldLabel>
-                        <Input
-                          id="tax-id"
-                          type="text"
-                          placeholder="TIN"
-                          aria-invalid={Boolean(errors.taxId)}
-                          className="h-11 px-3 text-sm md:text-sm"
-                          {...register("taxId", {
-                            required: "Tax ID is required",
-                          })}
-                        />
-                        {errors.taxId && (
-                          <FieldDescription className="text-destructive">
-                            {errors.taxId.message}
-                          </FieldDescription>
-                        )}
-                      </Field>
-
-                      <Field>
-                        <FieldLabel
-                          htmlFor="team-size"
-                          className="text-sm font-semibold"
-                        >
-                          Team size
-                        </FieldLabel>
-                        <select
-                          id="team-size"
-                          aria-invalid={Boolean(errors.teamSize)}
-                          className="h-11 w-full rounded-md border border-input bg-input/20 px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
-                          {...register("teamSize", {
-                            required: "Team size is required",
-                          })}
-                        >
-                          <option value="">Select team size</option>
-                          <option value="2-10">2-10</option>
-                          <option value="11-50">11-50</option>
-                          <option value="51-250">51-250</option>
-                          <option value="251+">251+</option>
-                        </select>
-                        {errors.teamSize && (
-                          <FieldDescription className="text-destructive">
-                            {errors.teamSize.message}
-                          </FieldDescription>
-                        )}
-                      </Field>
-
-                      <Field>
-                        <FieldLabel
-                          htmlFor="website"
-                          className="text-sm font-semibold"
-                        >
-                          Website
-                        </FieldLabel>
-                        <Input
-                          id="website"
-                          type="url"
-                          placeholder="https://example.com"
-                          className="h-11 px-3 text-sm md:text-sm"
-                          {...register("website")}
-                        />
-                      </Field>
-                    </>
-                  )}
-                </div>
-              </section>
+              <ProfileStep
+                accountType={accountType}
+                selectedAccountType={selectedAccountType}
+                register={register}
+                errors={errors}
+                password={password}
+              />
             )}
 
             {step === 2 && (
-              <section className="space-y-5">
-                <div>
-                  <h2 className="text-base font-semibold">
-                    Identity verification
-                  </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    KYC is required for every Funza workspace before account
-                    activation.
-                  </p>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field>
-                    <FieldLabel
-                      htmlFor="id-type"
-                      className="text-sm font-semibold"
-                    >
-                      ID type
-                    </FieldLabel>
-                    <select
-                      id="id-type"
-                      aria-invalid={Boolean(errors.idType)}
-                      className="h-11 w-full rounded-md border border-input bg-input/20 px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20"
-                      {...register("idType", {
-                        required: "ID type is required",
-                      })}
-                    >
-                      <option value="national_id">National ID</option>
-                      <option value="passport">Passport</option>
-                      <option value="drivers_license">Driver&apos;s license</option>
-                      <option value="voter_id">Voter ID</option>
-                    </select>
-                    {errors.idType && (
-                      <FieldDescription className="text-destructive">
-                        {errors.idType.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="id-number"
-                      className="text-sm font-semibold"
-                    >
-                      ID number
-                    </FieldLabel>
-                    <Input
-                      id="id-number"
-                      type="text"
-                      placeholder="GHA-000000000-0"
-                      aria-invalid={Boolean(errors.idNumber)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("idNumber", {
-                        required: "ID number is required",
-                      })}
-                    />
-                    {errors.idNumber && (
-                      <FieldDescription className="text-destructive">
-                        {errors.idNumber.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="date-of-birth"
-                      className="text-sm font-semibold"
-                    >
-                      Date of birth
-                    </FieldLabel>
-                    <Input
-                      id="date-of-birth"
-                      type="date"
-                      aria-invalid={Boolean(errors.dateOfBirth)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("dateOfBirth", {
-                        required: "Date of birth is required",
-                      })}
-                    />
-                    {errors.dateOfBirth && (
-                      <FieldDescription className="text-destructive">
-                        {errors.dateOfBirth.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="issuing-country"
-                      className="text-sm font-semibold"
-                    >
-                      Issuing country
-                    </FieldLabel>
-                    <Input
-                      id="issuing-country"
-                      type="text"
-                      placeholder="Ghana"
-                      aria-invalid={Boolean(errors.issuingCountry)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("issuingCountry", {
-                        required: "Issuing country is required",
-                      })}
-                    />
-                    {errors.issuingCountry && (
-                      <FieldDescription className="text-destructive">
-                        {errors.issuingCountry.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field className="sm:col-span-2">
-                    <FieldLabel
-                      htmlFor="residential-address"
-                      className="text-sm font-semibold"
-                    >
-                      Residential address
-                    </FieldLabel>
-                    <Input
-                      id="residential-address"
-                      type="text"
-                      placeholder="Street, area, house number"
-                      autoComplete="street-address"
-                      aria-invalid={Boolean(errors.residentialAddress)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("residentialAddress", {
-                        required: "Residential address is required",
-                      })}
-                    />
-                    {errors.residentialAddress && (
-                      <FieldDescription className="text-destructive">
-                        {errors.residentialAddress.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="city"
-                      className="text-sm font-semibold"
-                    >
-                      City
-                    </FieldLabel>
-                    <Input
-                      id="city"
-                      type="text"
-                      placeholder="Accra"
-                      autoComplete="address-level2"
-                      aria-invalid={Boolean(errors.city)}
-                      className="h-11 px-3 text-sm md:text-sm"
-                      {...register("city", {
-                        required: "City is required",
-                      })}
-                    />
-                    {errors.city && (
-                      <FieldDescription className="text-destructive">
-                        {errors.city.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field>
-                    <FieldLabel
-                      htmlFor="id-document"
-                      className="text-sm font-semibold"
-                    >
-                      Government ID
-                    </FieldLabel>
-                    <Input
-                      id="id-document"
-                      type="file"
-                      accept="image/*,.pdf"
-                      aria-invalid={Boolean(errors.idDocument)}
-                      className="h-11 px-3 py-2 text-sm md:text-sm"
-                      {...register("idDocument", {
-                        validate: (files) =>
-                          hasFile(files) || "Upload a government ID",
-                      })}
-                    />
-                    {errors.idDocument && (
-                      <FieldDescription className="text-destructive">
-                        {errors.idDocument.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="proof-of-address"
-                      className="text-sm font-semibold"
-                    >
-                      Proof of address
-                    </FieldLabel>
-                    <Input
-                      id="proof-of-address"
-                      type="file"
-                      accept="image/*,.pdf"
-                      aria-invalid={Boolean(errors.proofOfAddress)}
-                      className="h-11 px-3 py-2 text-sm md:text-sm"
-                      {...register("proofOfAddress", {
-                        validate: (files) =>
-                          hasFile(files) || "Upload proof of address",
-                      })}
-                    />
-                    {errors.proofOfAddress && (
-                      <FieldDescription className="text-destructive">
-                        {errors.proofOfAddress.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="business-document"
-                      className="text-sm font-semibold"
-                    >
-                      {businessDocumentLabel}
-                    </FieldLabel>
-                    <Input
-                      id="business-document"
-                      type="file"
-                      accept="image/*,.pdf"
-                      aria-invalid={Boolean(errors.businessDocument)}
-                      className="h-11 px-3 py-2 text-sm md:text-sm"
-                      {...register("businessDocument", {
-                        validate: (files) =>
-                          hasFile(files) ||
-                          `Upload ${businessDocumentLabel.toLowerCase()}`,
-                      })}
-                    />
-                    {errors.businessDocument && (
-                      <FieldDescription className="text-destructive">
-                        {errors.businessDocument.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-
-                  <Field>
-                    <FieldLabel
-                      htmlFor="selfie"
-                      className="text-sm font-semibold"
-                    >
-                      Selfie check
-                    </FieldLabel>
-                    <Input
-                      id="selfie"
-                      type="file"
-                      accept="image/*"
-                      aria-invalid={Boolean(errors.selfie)}
-                      className="h-11 px-3 py-2 text-sm md:text-sm"
-                      {...register("selfie", {
-                        validate: (files) =>
-                          hasFile(files) || "Upload a selfie image",
-                      })}
-                    />
-                    {errors.selfie && (
-                      <FieldDescription className="text-destructive">
-                        {errors.selfie.message}
-                      </FieldDescription>
-                    )}
-                  </Field>
-                </div>
-
-                <Field>
-                  <label
-                    htmlFor="kyc-consent"
-                    className="flex gap-3 rounded-md border border-border bg-input/20 p-4 text-sm"
-                  >
-                    <input
-                      id="kyc-consent"
-                      type="checkbox"
-                      className="mt-1 size-4 shrink-0 accent-foreground"
-                      aria-invalid={Boolean(errors.kycConsent)}
-                      {...register("kycConsent", {
-                        required:
-                          "Consent is required to complete identity verification",
-                      })}
-                    />
-                    <span>
-                      I confirm the information provided is accurate and I
-                      authorize Funza CRM to verify my identity and business
-                      documents.
-                    </span>
-                  </label>
-                  {errors.kycConsent && (
-                    <FieldDescription className="text-destructive">
-                      {errors.kycConsent.message}
-                    </FieldDescription>
-                  )}
-                </Field>
-              </section>
+              <KYCStep
+                accountType={accountType}
+                register={register}
+                errors={errors}
+                documentApproval={documentApproval}
+                handleGovernmentIdUpload={handleGovernmentIdUpload}
+                handleSelfieUpload={handleSelfieUpload}
+                handleBusinessDocUpload={handleBusinessDocUpload}
+                handleProofAddressUpload={handleProofAddressUpload}
+              />
             )}
 
             {step === 3 && (
-              <ReviewStep
-                accountType={accountType}
-                businessDocumentLabel={businessDocumentLabel}
-                values={getValues()}
-              />
+              <>
+                {console.log("ReviewStep formValues:", formValues)}
+                <ReviewStep
+                  accountType={accountType}
+                  businessDocumentLabel={businessDocumentLabel}
+                  values={formValues as SignupFormValues}
+                />
+              </>
             )}
 
             <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center">
@@ -1016,16 +615,26 @@ export function SignupForm({
                 <Button
                   type="button"
                   onClick={goNext}
+                  disabled={isCreatingAccount}
                   className="h-11 gap-2 text-sm font-semibold sm:ml-auto sm:w-auto"
                 >
-                  Continue
-                  <ChevronRight className="size-4" />
+                  {step === 1 && isCreatingAccount ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    <>
+                      Continue
+                      <ChevronRight className="size-4" />
+                    </>
+                  )}
                 </Button>
               ) : (
                 <Button
-                  type="submit"
+                  type="button"
+                  onClick={submitKYC}
                   disabled={isSubmitting}
-                  className="h-11 gap-2 text-sm font-semibold sm:ml-auto sm:w-auto"
                 >
                   {isSubmitting ? (
                     <>
@@ -1067,76 +676,5 @@ export function SignupForm({
         </form>
       </CardContent>
     </Card>
-  )
-}
-
-function ReviewStep({
-  accountType,
-  businessDocumentLabel,
-  values,
-}: {
-  accountType: AccountType
-  businessDocumentLabel: string
-  values: SignupFormValues
-}) {
-  const items = [
-    ["Category", getAccountTypeLabel(accountType)],
-    ["Name", values.name],
-    ["Email", values.email],
-    ["Phone", values.phone],
-    ["Country", values.country],
-    ["Workspace", values.businessName],
-    ["ID type", values.idType?.replace(/_/g, " ")],
-    ["ID number", values.idNumber],
-    ["Address", `${values.residentialAddress}, ${values.city}`],
-  ]
-
-  const documents = [
-    ["Government ID", values.idDocument?.[0]?.name],
-    ["Proof of address", values.proofOfAddress?.[0]?.name],
-    [businessDocumentLabel, values.businessDocument?.[0]?.name],
-    ["Selfie check", values.selfie?.[0]?.name],
-  ]
-
-  return (
-    <section className="space-y-5">
-      <div>
-        <h2 className="text-base font-semibold">Review registration</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Your identity verification must be complete before submission.
-        </p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        {items.map(([label, value]) => (
-          <div
-            key={label}
-            className="min-h-16 rounded-md border border-border bg-input/20 p-3"
-          >
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              {label}
-            </p>
-            <p className="mt-1 truncate text-sm font-semibold capitalize">
-              {value || "Not provided"}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <div className="rounded-md border border-[#16a34a]/30 bg-[#e8f6ef] p-4 text-[#047857]">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          <CheckCircle className="size-4" />
-          KYC ready for submission
-        </div>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {documents.map(([label, value]) => (
-            <p key={label} className="truncate text-xs">
-              <span className="font-semibold">{label}:</span>{" "}
-              {value || "Missing"}
-            </p>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
+  );
 }
