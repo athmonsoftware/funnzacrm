@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react";
 import {
   Archive,
   Bot,
@@ -12,29 +12,154 @@ import {
   Sparkles,
   StickyNote,
   UserRound,
-} from "lucide-react"
-import { conversations, customers } from "@/lib/mock-data"
-import { Badge, Button, Card } from "@/components/ui"
+} from "lucide-react";
+// import { conversations, customers } from "@/lib/mock-data";
+import { Badge, Button, Card } from "@/components/ui";
+
+type Message = {
+  id: string;
+  role: "agent" | "ai" | "customer";
+  text: string;
+  time: string;
+};
+
+type Conversation = {
+  id: string;
+  customer: string;
+  preview: string;
+  time: string;
+  status: string;
+  channel: string;
+  assignedAgent: string;
+  aiClassification: string;
+  summary: string;
+  messages: Message[];
+};
 
 export default function InboxPage() {
-  const [selectedConversation, setSelectedConversation] = useState(conversations[0])
-  const [channel, setChannel] = useState("All")
-  const customer = customers.find((item) => item.id === selectedConversation.customerId)
-
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [channel, setChannel] = useState("All");
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const filteredConversations = useMemo(() => {
-    if (channel === "All") return conversations
-    return conversations.filter((conversation) => conversation.channel === channel)
-  }, [channel])
+    if (channel === "All") return conversations;
+
+    return conversations.filter(
+      (conversation) => conversation.channel === channel
+    );
+  }, [channel, conversations]);
+
+  const [reply, setReply] = useState("");
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    async function fetchConversations() {
+      try {
+        setLoading(true);
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/conversations`,
+          {
+            credentials: "include",
+          }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error);
+
+        setConversations(data.conversations || []);
+      } catch (err) {
+        console.error("Failed to load conversations:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchConversations();
+  }, []);
+  useEffect(() => {
+    if (!selectedConversation && conversations.length > 0) {
+      setSelectedConversation(conversations[0]);
+    }
+  }, [conversations, selectedConversation]);
+  if (loading) {
+    return (
+      <div className="p-10 text-sm text-gray-500">Loading conversations...</div>
+    );
+  }
+
+  if (!selectedConversation) return null;
+
+  const customer = {
+    name: selectedConversation.customer,
+    phone: selectedConversation.customer_number,
+    email: selectedConversation.email,
+    status: selectedConversation.status,
+    last_active: selectedConversation.last_active,
+    tags: selectedConversation.tags || [],
+  };
+
+  const handleSendSms = async () => {
+    try {
+      setSending(true);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/conversations/send`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phoneNumber: selectedConversation.phone,
+            message: reply,
+            companyId: selectedConversation.company_id,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      console.log("SMS sent:", data);
+
+      // clear input
+      setReply("");
+
+      // refresh conversations
+      const refresh = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/conversations`,
+        {
+          credentials: "include",
+        }
+      );
+
+      const refreshed = await refresh.json();
+      setConversations(refreshed.conversations || []);
+    } catch (err: any) {
+      console.error("Failed to send SMS:", err.message);
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#f6f8fb] px-4 py-5 text-[#14213d] sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#16a34a]">Conversation center</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">Unified inbox</h1>
+            <p className="text-sm font-semibold text-[#16a34a]">
+              Conversation center
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">
+              Unified inbox
+            </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
-              Manage SMS, WhatsApp, and AI conversations with suggested replies and customer context in one view.
+              Manage SMS, WhatsApp, and AI conversations with suggested replies
+              and customer context in one view.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -62,11 +187,13 @@ export default function InboxPage() {
                 <h2 className="font-semibold">Open conversations</h2>
                 <Badge tone="blue">{filteredConversations.length}</Badge>
               </div>
-              <p className="mt-1 text-sm text-[#64748b]">Prioritized by unread and escalation risk.</p>
+              <p className="mt-1 text-sm text-[#64748b]">
+                Prioritized by unread and escalation risk.
+              </p>
             </div>
             <div className="max-h-[720px] overflow-y-auto">
               {filteredConversations.map((conversation) => {
-                const selected = selectedConversation.id === conversation.id
+                const selected = selectedConversation.id === conversation.id;
 
                 return (
                   <button
@@ -80,19 +207,39 @@ export default function InboxPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="truncate font-semibold">{conversation.customer}</p>
-                          {conversation.unread ? <span className="h-2 w-2 shrink-0 rounded-full bg-[#16a34a]" /> : null}
+                          <p className="truncate font-semibold">
+                            {conversation.customer}
+                          </p>
+                          {conversation.unread ? (
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-[#16a34a]" />
+                          ) : null}
                         </div>
-                        <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#64748b]">{conversation.preview}</p>
+                        <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#64748b]">
+                          {conversation.preview}
+                        </p>
                       </div>
-                      <span className="shrink-0 text-xs text-[#64748b]">{conversation.time}</span>
+                      <span className="shrink-0 text-xs text-[#64748b]">
+                        {conversation.time}
+                      </span>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <Badge tone={conversation.channel === "WhatsApp" ? "green" : "blue"}>{conversation.channel}</Badge>
-                      <Badge tone={conversation.priority === "high" ? "amber" : "gray"}>{conversation.aiClassification}</Badge>
+                      <Badge
+                        tone={
+                          conversation.channel === "WhatsApp" ? "green" : "blue"
+                        }
+                      >
+                        {conversation.channel}
+                      </Badge>
+                      <Badge
+                        tone={
+                          conversation.priority === "high" ? "amber" : "gray"
+                        }
+                      >
+                        {conversation.aiClassification}
+                      </Badge>
                     </div>
                   </button>
-                )
+                );
               })}
             </div>
           </Card>
@@ -102,14 +249,23 @@ export default function InboxPage() {
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-semibold">{selectedConversation.customer}</h2>
-                    <Badge tone={selectedConversation.status === "open" ? "green" : "gray"}>
+                    <h2 className="font-semibold">
+                      {selectedConversation.customer}
+                    </h2>
+                    <Badge
+                      tone={
+                        selectedConversation.status === "open"
+                          ? "green"
+                          : "gray"
+                      }
+                    >
                       {selectedConversation.status}
                     </Badge>
                     <Badge tone="blue">{selectedConversation.channel}</Badge>
                   </div>
                   <p className="mt-1 text-sm text-[#64748b]">
-                    Assigned to {selectedConversation.assignedAgent} · {selectedConversation.aiClassification}
+                    Assigned to {selectedConversation.assignedAgent} ·{" "}
+                    {selectedConversation.aiClassification}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -131,58 +287,70 @@ export default function InboxPage() {
                   <Sparkles className="mt-0.5 text-[#4f46e5]" size={18} />
                   <div>
                     <p className="text-sm font-semibold">AI summary</p>
-                    <p className="mt-1 text-sm leading-6 text-[#475569]">{selectedConversation.summary}</p>
+                    <p className="mt-1 text-sm leading-6 text-[#475569]">
+                      {selectedConversation.summary}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {selectedConversation.messages.map((message) => {
-                const isAgent = message.role === "agent"
-                const isAi = message.role === "ai"
+              {selectedConversation.messages.map((message: any) => {
+                const isAgent = message.role === "agent";
+                const isAi = message.role === "ai";
 
                 return (
                   <div
                     key={message.id}
-                    className={`flex ${isAgent ? "justify-end" : "justify-start"}`}
+                    className={`flex ${
+                      isAgent ? "justify-end" : "justify-start"
+                    }`}
                   >
                     <div
                       className={`max-w-[86%] rounded-md px-4 py-3 text-sm leading-6 shadow-sm ${
                         isAgent
                           ? "bg-[#101828] text-white"
                           : isAi
-                            ? "border border-[#dbeafe] bg-[#eff6ff] text-[#1e3a8a]"
-                            : "border border-[#edf1f5] bg-white text-[#14213d]"
+                          ? "border border-[#dbeafe] bg-[#eff6ff] text-[#1e3a8a]"
+                          : "border border-[#edf1f5] bg-white text-[#14213d]"
                       }`}
                     >
                       <div className="mb-1 flex items-center gap-2 text-xs opacity-75">
-                        {isAi ? <Bot size={13} /> : isAgent ? <UserRound size={13} /> : <MessageCircle size={13} />}
+                        {isAi ? (
+                          <Bot size={13} />
+                        ) : isAgent ? (
+                          <UserRound size={13} />
+                        ) : (
+                          <MessageCircle size={13} />
+                        )}
                         <span>{message.role}</span>
                         <span>{message.time}</span>
                       </div>
                       {message.text}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
 
             <div className="border-t border-[#edf1f5] bg-white p-4">
-              {selectedConversation.aiSuggestions.length > 0 ? (
+              {(selectedConversation.aiSuggestions ?? []).length > 0 ? (
                 <div className="mb-4 space-y-2">
                   <div className="flex items-center gap-2 text-sm font-semibold">
                     <Bot size={16} className="text-[#4f46e5]" />
                     AI suggested replies
                   </div>
                   <div className="flex gap-2 overflow-x-auto pb-1">
-                    {selectedConversation.aiSuggestions.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        className="min-w-[260px] rounded-md border border-[#dbeafe] bg-[#eff6ff] px-3 py-2 text-left text-xs leading-5 text-[#1e3a8a] transition hover:border-[#4f46e5]/40"
-                        type="button"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
+                    {selectedConversation.aiSuggestions.map(
+                      (suggestion: any) => (
+                        <button
+                          key={suggestion}
+                          className="min-w-[260px] rounded-md border border-[#dbeafe] bg-[#eff6ff] px-3 py-2 text-left text-xs leading-5 text-[#1e3a8a] transition hover:border-[#4f46e5]/40"
+                          type="button"
+                        >
+                          {suggestion}
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -190,10 +358,16 @@ export default function InboxPage() {
                 <input
                   className="h-11 min-w-0 flex-1 rounded-md border border-[#d8e0e8] px-3 text-sm outline-none focus:border-[#16a34a]"
                   placeholder="Type a reply..."
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
                 />
-                <Button className="gap-2">
+                <Button
+                  className="gap-2"
+                  disabled={sending || !reply.trim()}
+                  onClick={handleSendSms}
+                >
                   <Send size={16} />
-                  Send
+                  {sending ? "Sending..." : "Send"}
                 </Button>
               </div>
             </div>
@@ -203,30 +377,44 @@ export default function InboxPage() {
             <Card>
               <div className="border-b border-[#edf1f5] px-5 py-4">
                 <h2 className="font-semibold">Customer information</h2>
-                <p className="mt-1 text-sm text-[#64748b]">Profile, tags, payment signals, and AI insight.</p>
+                <p className="mt-1 text-sm text-[#64748b]">
+                  Profile, tags, payment signals, and AI insight.
+                </p>
               </div>
               <div className="space-y-4 p-5">
                 <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-md bg-[#eef7f1] text-sm font-bold text-[#047857]">
                     {selectedConversation.customer
                       .split(" ")
-                      .map((part) => part[0])
+                      .map((part: any) => part[0])
                       .slice(0, 2)
                       .join("")}
                   </span>
                   <div className="min-w-0">
-                    <p className="font-semibold">{selectedConversation.customer}</p>
-                    <p className="truncate text-sm text-[#64748b]">{customer?.email ?? "No email on file"}</p>
+                    <p className="font-semibold">
+                      {selectedConversation.customer}
+                    </p>
+                    <p className="truncate text-sm text-[#64748b]">
+                      {customer?.email ?? "No email on file"}
+                    </p>
                   </div>
                 </div>
                 <InfoRow label="Phone" value={customer?.phone ?? "Unknown"} />
                 <InfoRow label="Status" value={customer?.status ?? "Unknown"} />
-                <InfoRow label="Last activity" value={customer?.lastActive ?? selectedConversation.time} />
-                <InfoRow label="Assigned agent" value={selectedConversation.assignedAgent} />
+                <InfoRow
+                  label="Last activity"
+                  value={customer?.last_active ?? selectedConversation.time}
+                />
+                <InfoRow
+                  label="Assigned agent"
+                  value={selectedConversation.assignedAgent}
+                />
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">Tags</p>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+                    Tags
+                  </p>
                   <div className="flex flex-wrap gap-2">
-                    {(customer?.tags ?? ["Conversation"]).map((tag) => (
+                    {(customer?.tags ?? ["Conversation"]).map((tag: any) => (
                       <Badge key={tag} tone={tag === "VIP" ? "amber" : "gray"}>
                         {tag}
                       </Badge>
@@ -241,17 +429,33 @@ export default function InboxPage() {
                 <h2 className="font-semibold">Agent tools</h2>
               </div>
               <div className="space-y-3 p-5">
-                <ToolRow icon={StickyNote} label="Internal note" value="Add context for teammates" />
-                <ToolRow icon={CheckCircle2} label="Escalation" value="Ready for human follow-up" />
-                <ToolRow icon={Clock} label="SLA timer" value="18 min remaining" />
-                <ToolRow icon={MessageSquareText} label="Conversation type" value={selectedConversation.aiClassification} />
+                <ToolRow
+                  icon={StickyNote}
+                  label="Internal note"
+                  value="Add context for teammates"
+                />
+                <ToolRow
+                  icon={CheckCircle2}
+                  label="Escalation"
+                  value="Ready for human follow-up"
+                />
+                <ToolRow
+                  icon={Clock}
+                  label="SLA timer"
+                  value="18 min remaining"
+                />
+                <ToolRow
+                  icon={MessageSquareText}
+                  label="Conversation type"
+                  value={selectedConversation.aiClassification}
+                />
               </div>
             </Card>
           </aside>
         </section>
       </div>
     </main>
-  )
+  );
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -260,7 +464,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <span className="text-[#64748b]">{label}</span>
       <span className="min-w-0 truncate text-right font-medium">{value}</span>
     </div>
-  )
+  );
 }
 
 function ToolRow({
@@ -268,9 +472,9 @@ function ToolRow({
   label,
   value,
 }: {
-  icon: React.ElementType
-  label: string
-  value: string
+  icon: React.ElementType;
+  label: string;
+  value: string;
 }) {
   return (
     <button
@@ -285,5 +489,5 @@ function ToolRow({
         <span className="block truncate text-xs text-[#64748b]">{value}</span>
       </span>
     </button>
-  )
+  );
 }

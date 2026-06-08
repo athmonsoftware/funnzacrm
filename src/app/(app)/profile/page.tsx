@@ -28,13 +28,22 @@ async function updateProfile(formData: FormData) {
     phone: formData.get("phone"),
   };
 
-  await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${session.user.id}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     },
-    body: JSON.stringify(payload),
-  });
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Update failed:", text);
+    throw new Error("Failed to update profile");
+  }
 }
 
 export default async function ProfilePage() {
@@ -55,12 +64,12 @@ export default async function ProfilePage() {
   // 🔥 FETCH FULL PROFILE HERE
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${user.id}`,
-    { cache: "no-store" }
+    { cache: "no-store" },
   );
 
   const profile = await res.json();
 
-  const initials = profile.name?.charAt(0).toUpperCase() ?? "U";
+  const initials = profile.full_name?.charAt(0).toUpperCase() ?? "U";
 
   return (
     <section className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
@@ -70,7 +79,7 @@ export default async function ProfilePage() {
           {initials}
         </div>
 
-        <h2 className="mt-4 text-xl font-semibold">{profile.name}</h2>
+        <h2 className="mt-4 text-xl font-semibold">{profile.full_name}</h2>
         <p className="mt-1 text-sm text-[#64748b]">{profile.email}</p>
 
         <div className="mt-4 space-y-3">
@@ -90,9 +99,9 @@ export default async function ProfilePage() {
         <form action={updateProfile}>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <TextInput
-              name="name"
+              name="full_name"
               label="Full name"
-              defaultValue={profile.name ?? ""}
+              defaultValue={profile.full_name ?? ""}
             />
 
             <TextInput

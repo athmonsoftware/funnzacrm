@@ -1,27 +1,59 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
-import { Download, Filter, Search, Tags, Upload, UserPlus } from "lucide-react"
-import { customers, customerSegments, customerTags } from "@/lib/mock-data"
-import { Badge, Button, Card } from "@/components/ui"
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Download, Filter, Search, Tags, Upload, UserPlus } from "lucide-react";
+import { customerSegments, customerTags } from "@/lib/mock-data";
+import { Badge, Button, Card } from "@/components/ui";
+import Papa from "papaparse";
+
+export type Customer = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  source: string | null;
+  status: string;
+  stage: string;
+  assigned_agent: string | null;
+  tags: string[];
+  avatar: string | null;
+  last_active: string | null;
+};
 
 const statusTone = {
   Active: "green",
   Inactive: "gray",
   Churned: "red",
-} as const
+} as const;
 
 function getStatusTone(status: string) {
-  return status in statusTone ? statusTone[status as keyof typeof statusTone] : "gray"
+  return status in statusTone
+    ? statusTone[status as keyof typeof statusTone]
+    : "gray";
 }
 
 export default function CustomersPage() {
-  const [query, setQuery] = useState("")
-  const [status, setStatus] = useState("All")
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("All");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    source: "",
+    status: "",
+    stage: "",
+    assignedAgent: "",
+    tags: "",
+    avatar: "",
+  });
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [loading, setLoading] = useState(true);
   const filteredCustomers = useMemo(() => {
-    const value = query.trim().toLowerCase()
+    const value = query.trim().toLowerCase();
 
     return customers.filter((customer) => {
       const matchesSearch =
@@ -31,47 +63,268 @@ export default function CustomersPage() {
           customer.phone,
           customer.email,
           customer.status,
-          customer.assignedAgent ?? "Unassigned",
+          customer.assigned_agent ?? "Unassigned",
           customer.tags.join(" "),
         ]
           .join(" ")
           .toLowerCase()
-          .includes(value)
-      const matchesStatus = status === "All" || customer.status === status
+          .includes(value);
 
-      return matchesSearch && matchesStatus
-    })
-  }, [query, status])
+      const matchesStatus = status === "All" || customer.status === status;
 
-  const visibleIds = filteredCustomers.map((customer) => customer.id)
-  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id))
+      return matchesSearch && matchesStatus;
+    });
+  }, [customers, query, status]);
+  const visibleIds = filteredCustomers.map((customer) => customer.id);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
 
   function toggleCustomer(id: string) {
     setSelectedIds((current) =>
-      current.includes(id) ? current.filter((selectedId) => selectedId !== id) : [...current, id],
-    )
+      current.includes(id)
+        ? current.filter((selectedId) => selectedId !== id)
+        : [...current, id]
+    );
   }
 
   function toggleVisible() {
     setSelectedIds((current) => {
-      if (allVisibleSelected) return current.filter((id) => !visibleIds.includes(id))
-      return Array.from(new Set([...current, ...visibleIds]))
-    })
+      if (allVisibleSelected)
+        return current.filter((id) => !visibleIds.includes(id));
+      return Array.from(new Set([...current, ...visibleIds]));
+    });
   }
 
+  async function createCustomer() {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/customers`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...form,
+            tags: form.tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter(Boolean),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+
+      await fetchCustomers();
+
+      setShowCreateModal(false);
+
+      setForm({
+        name: "",
+        phone: "",
+        email: "",
+        source: "WhatsApp",
+        status: "Active",
+        stage: "New",
+        assignedAgent: "",
+        tags: "",
+        avatar: "",
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function fetchCustomers() {
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/customers`,
+        {
+          credentials: "include",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+
+      setCustomers(data.customers || []);
+    } catch (err) {
+      console.error("Failed to load customers:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function updateCustomer() {
+    if (!editingCustomer) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${editingCustomer.id}`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: form.name,
+            phone: form.phone,
+            email: form.email,
+
+            status: form.status,
+            stage: form.stage,
+
+            source: form.source,
+
+            assignedAgent: form.assignedAgent,
+
+            tags: form.tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter(Boolean),
+
+            avatar: form.avatar,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+
+      await fetchCustomers();
+
+      resetForm();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function resetForm() {
+    setEditingCustomer(null);
+    setShowCreateModal(false);
+
+    setForm({
+      name: "",
+      phone: "",
+      email: "",
+      source: "WhatsApp",
+      status: "Active",
+      stage: "New",
+      assignedAgent: "",
+      tags: "",
+      avatar: "",
+    });
+  }
+
+  async function deleteCustomer(id: string) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this customer?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/customers/${id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+
+      await fetchCustomers();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleCSVUpload(file: File) {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const rows = results.data;
+
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/customers/bulk`,
+            {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ rows }),
+            }
+          );
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error);
+          }
+
+          await fetchCustomers();
+          console.log("Bulk import success:", data);
+        } catch (err) {
+          console.error("Bulk import failed:", err);
+        }
+      },
+    });
+  }
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  useEffect(() => {
+    console.log("Customers:", customers);
+  }, [customers]);
+
+  console.log("Filtered:", filteredCustomers);
   return (
     <main className="min-h-screen bg-[#f6f8fb] px-4 py-5 text-[#14213d] sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#16a34a]">Customer management</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">Customer directory</h1>
+            <p className="text-sm font-semibold text-[#16a34a]">
+              Customer management
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">
+              Customer directory
+            </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
-              Search, segment, assign, import, and export customer records across SMS, WhatsApp, and AI-assisted support.
+              Search, segment, assign, import, and export customer records
+              across SMS, WhatsApp, and AI-assisted support.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button tone="secondary" className="gap-2">
+            <Button
+              tone="secondary"
+              className="gap-2"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <Upload size={16} />
               Import CSV
             </Button>
@@ -79,7 +332,7 @@ export default function CustomersPage() {
               <Download size={16} />
               Export CSV
             </Button>
-            <Button className="gap-2">
+            <Button className="gap-2" onClick={() => setShowCreateModal(true)}>
               <UserPlus size={16} />
               Add customer
             </Button>
@@ -89,20 +342,33 @@ export default function CustomersPage() {
         <section className="grid gap-4 lg:grid-cols-3">
           <Card className="p-4">
             <p className="text-sm text-[#64748b]">Total customers</p>
-            <p className="mt-2 text-2xl font-semibold">{customers.length.toLocaleString()}</p>
-            <p className="mt-1 text-xs text-[#64748b]">12 demo records ready for workflows</p>
+            <p className="mt-2 text-2xl font-semibold">
+              {customers.length.toLocaleString()}
+            </p>
+            <p className="mt-1 text-xs text-[#64748b]">
+              12 demo records ready for workflows
+            </p>
           </Card>
           <Card className="p-4">
             <p className="text-sm text-[#64748b]">Active customers</p>
             <p className="mt-2 text-2xl font-semibold">
-              {customers.filter((customer) => customer.status === "Active").length}
+              {
+                customers.filter((customer) => customer.status === "Active")
+                  .length
+              }
             </p>
-            <p className="mt-1 text-xs text-[#64748b]">Available for campaigns and assignment</p>
+            <p className="mt-1 text-xs text-[#64748b]">
+              Available for campaigns and assignment
+            </p>
           </Card>
           <Card className="p-4">
             <p className="text-sm text-[#64748b]">Top segment</p>
-            <p className="mt-2 text-2xl font-semibold">{customerSegments[0].name}</p>
-            <p className="mt-1 text-xs text-[#64748b]">{customerSegments[0].count} customers in segment</p>
+            <p className="mt-2 text-2xl font-semibold">
+              {customerSegments[0].name}
+            </p>
+            <p className="mt-1 text-xs text-[#64748b]">
+              {customerSegments[0].count} customers in segment
+            </p>
           </Card>
         </section>
 
@@ -132,8 +398,14 @@ export default function CustomersPage() {
               </label>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-[#64748b]">{selectedIds.length} selected</span>
-              <Button tone="secondary" className="gap-2" disabled={selectedIds.length === 0}>
+              <span className="text-sm text-[#64748b]">
+                {selectedIds.length} selected
+              </span>
+              <Button
+                tone="secondary"
+                className="gap-2"
+                disabled={selectedIds.length === 0}
+              >
                 <Tags size={16} />
                 Apply tag
               </Button>
@@ -162,6 +434,7 @@ export default function CustomersPage() {
                   <th className="px-5 py-3 font-semibold">Status</th>
                   <th className="px-5 py-3 font-semibold">Last activity</th>
                   <th className="px-5 py-3 font-semibold">Assigned agent</th>
+                  <th className="px-5 py-3 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#edf1f5]">
@@ -179,38 +452,94 @@ export default function CustomersPage() {
                       <div className="flex items-center gap-3">
                         <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#eef7f1] text-xs font-bold text-[#047857]">
                           {customer.name
-                            .split(" ")
+                            ?.split(" ")
                             .map((part) => part[0])
                             .slice(0, 2)
                             .join("")}
                         </span>
                         <div>
                           <p className="font-semibold">{customer.name}</p>
-                          <p className="mt-0.5 text-xs text-[#64748b]">{customer.source}</p>
+                          <p className="mt-0.5 text-xs text-[#64748b]">
+                            {customer.source}
+                          </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-4 font-mono text-xs">{customer.phone}</td>
-                    <td className="px-5 py-4 text-[#475569]">{customer.email}</td>
+                    <td className="px-5 py-4 font-mono text-xs">
+                      {customer.phone}
+                    </td>
+                    <td className="px-5 py-4 text-[#475569]">
+                      {customer.email}
+                    </td>
                     <td className="px-5 py-4">
                       <div className="flex max-w-56 flex-wrap gap-1.5">
                         {customer.tags.map((tag) => (
-                          <Badge key={tag} tone={tag === "VIP" ? "amber" : "gray"}>
+                          <Badge
+                            key={tag}
+                            tone={tag === "VIP" ? "amber" : "gray"}
+                          >
                             {tag}
                           </Badge>
                         ))}
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <Badge tone={getStatusTone(customer.status)}>{customer.status}</Badge>
+                      <Badge tone={getStatusTone(customer.status)}>
+                        {customer.status}
+                      </Badge>
                     </td>
-                    <td className="px-5 py-4 text-[#64748b]">{customer.lastActive}</td>
+                    <td className="px-5 py-4 text-[#64748b]">
+                      {customer.last_active
+                        ? new Date(customer.last_active).toLocaleDateString()
+                        : "-"}
+                    </td>
                     <td className="px-5 py-4">
-                      {customer.assignedAgent ? (
-                        <span className="font-medium">{customer.assignedAgent}</span>
+                      {customer.assigned_agent ? (
+                        <span className="font-medium">
+                          {customer.assigned_agent}
+                        </span>
                       ) : (
                         <Badge tone="gray">Unassigned</Badge>
                       )}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex gap-2">
+                        <Button
+                          tone="secondary"
+                          onClick={() => {
+                            setEditingCustomer(customer);
+
+                            setForm({
+                              name: customer.name || "",
+                              phone: customer.phone || "",
+                              email: customer.email || "",
+
+                              source: customer.source || "",
+
+                              status: customer.status || "Active",
+
+                              stage: customer.stage || "New",
+
+                              assignedAgent: customer.assigned_agent || "",
+
+                              tags: customer.tags?.join(", ") || "",
+
+                              avatar: customer.avatar || "",
+                            });
+
+                            setShowCreateModal(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+
+                        <Button
+                          className="bg-red-600 text-white hover:bg-red-700"
+                          onClick={() => deleteCustomer(customer.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -220,8 +549,15 @@ export default function CustomersPage() {
 
           <div className="flex flex-col gap-3 border-t border-[#edf1f5] px-5 py-4 text-sm text-[#64748b] sm:flex-row sm:items-center sm:justify-between">
             <p>
-              Showing <span className="font-semibold text-[#14213d]">{filteredCustomers.length}</span> of{" "}
-              <span className="font-semibold text-[#14213d]">{customers.length}</span> customers
+              Showing{" "}
+              <span className="font-semibold text-[#14213d]">
+                {filteredCustomers.length}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-[#14213d]">
+                {customers.length}
+              </span>{" "}
+              customers
             </p>
             <div className="flex flex-wrap gap-2">
               {customerTags.slice(0, 5).map((tag) => (
@@ -233,6 +569,127 @@ export default function CustomersPage() {
           </div>
         </Card>
       </div>
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <Card className="w-full max-w-md p-6">
+            <h2 className="mb-4 text-lg font-semibold">
+              {editingCustomer ? "Edit Customer" : "Add Customer"}
+            </h2>
+
+            <div className="space-y-3">
+              <input
+                className="w-full rounded border p-2"
+                placeholder="Full Name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+
+              <input
+                className="w-full rounded border p-2"
+                placeholder="Phone Number"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+
+              <input
+                className="w-full rounded border p-2"
+                placeholder="Email Address"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+
+              <input
+                className="w-full rounded border p-2"
+                placeholder="Assigned Agent"
+                value={form.assignedAgent}
+                onChange={(e) =>
+                  setForm({ ...form, assignedAgent: e.target.value })
+                }
+              />
+
+              <input
+                className="w-full rounded border p-2"
+                placeholder="Tags (VIP, Retail, Enterprise)"
+                value={form.tags}
+                onChange={(e) => setForm({ ...form, tags: e.target.value })}
+              />
+
+              <input
+                className="w-full rounded border p-2"
+                placeholder="Avatar URL (optional)"
+                value={form.avatar}
+                onChange={(e) => setForm({ ...form, avatar: e.target.value })}
+              />
+
+              <select
+                className="w-full rounded border p-2"
+                value={form.source}
+                onChange={(e) => setForm({ ...form, source: e.target.value })}
+              >
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="SMS">SMS</option>
+                <option value="Web chat">Web chat</option>
+                <option value="Email">Email</option>
+                <option value="Manual">Manual</option>
+              </select>
+
+              <select
+                className="w-full rounded border p-2"
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Churned">Churned</option>
+              </select>
+
+              <select
+                className="w-full rounded border p-2"
+                value={form.stage}
+                onChange={(e) => setForm({ ...form, stage: e.target.value })}
+              >
+                <option value="New">New</option>
+                <option value="Qualified">Qualified</option>
+                <option value="Support">Support</option>
+                <option value="Customer">Customer</option>
+                <option value="Negotiation">Negotiation</option>
+                <option value="Enterprise lead">Enterprise lead</option>
+                <option value="Lost">Lost</option>
+              </select>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <Button
+                tone="secondary"
+                onClick={() => {
+                  setEditingCustomer(null);
+                  setShowCreateModal(false);
+                }}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                onClick={() =>
+                  editingCustomer ? updateCustomer() : createCustomer()
+                }
+              >
+                {editingCustomer ? "Update" : "Create"}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleCSVUpload(file);
+        }}
+      />
     </main>
-  )
+  );
 }

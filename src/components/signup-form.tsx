@@ -488,29 +488,35 @@ export function SignupForm({
     try {
       setIsCreatingAccount(true);
 
-      const signupPayload = {
-        email: getValues("email"),
-        password: getValues("password"),
-        name: getValues("name"),
-      };
+      const data = getValues();
 
-      const { error } = await signUp.email(signupPayload);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/kyc/complete`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            userId: session?.user?.id,
+            ...data,
+          }),
+        },
+      );
 
-      if (error) {
-        toast.error(error.message ?? "Could not create account.");
-        return;
+      if (!response.ok) {
+        throw new Error("Failed to complete registration");
       }
 
       toast.success("Account created. Check your email for verification.");
 
-      router.push(
-        `/verify-email?email=${encodeURIComponent(signupPayload.email)}`,
-      );
+      router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
     } catch (error) {
-      console.error("KYC submit error:", error);
-
       toast.error(
-        error instanceof Error ? error.message : "Failed to create account",
+        error instanceof Error
+          ? error.message
+          : "Failed to complete registration",
       );
     } finally {
       setIsCreatingAccount(false);
