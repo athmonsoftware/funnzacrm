@@ -1,6 +1,5 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Activity,
@@ -62,6 +61,46 @@ const activityIcons = {
 };
 
 export default function DashboardPage() {
+  const [loadingCampaign, setLoadingCampaign] = useState(false);
+  const [message, setMessage] = useState("");
+  const [channel, setChannel] = useState("sms");
+  const [source, setSource] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const createCampaign = async () => {
+    try {
+      setLoadingCampaign(true);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/sms/bulk`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message,
+            channel,
+            source: source || null,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      console.log("✅ Campaign created:", data);
+
+      alert(`Campaign started!\nSent: ${data.sent}\nFailed: ${data.failed}`);
+    } catch (err) {
+      const error = err as Error;
+      console.error(error.message);
+    } finally {
+      setLoadingCampaign(false);
+    }
+  };
   return (
     <main className="min-h-screen bg-[#f6f8fb] px-4 py-5 text-[#14213d] sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
@@ -79,8 +118,13 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button tone="secondary">Create campaign</Button>
-            <Button>Send message</Button>
+            <div className="flex flex-wrap gap-2">
+              <Button tone="secondary" onClick={() => setIsModalOpen(true)}>
+                Create campaign
+              </Button>
+
+              <Button onClick={() => setIsModalOpen(true)}>Send message</Button>
+            </div>
           </div>
         </section>
 
@@ -115,6 +159,7 @@ export default function DashboardPage() {
               title="Performance pulse"
               description="Customer growth, message volume, AI performance, and revenue trends."
             />
+
             <div className="grid gap-5 p-5 lg:grid-cols-2">
               <MiniBarChart
                 title="Customer growth"
@@ -294,6 +339,70 @@ export default function DashboardPage() {
                   </div>
                 );
               })}
+              {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                  <div className="w-full max-w-lg rounded-md bg-white p-5 shadow-xl">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h2 className="text-lg font-semibold">Create Campaign</h2>
+
+                      <button
+                        onClick={() => setIsModalOpen(false)}
+                        className="text-sm text-gray-500"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Message */}
+                    <textarea
+                      className="h-28 w-full rounded-md border p-3 text-sm"
+                      placeholder="Write your campaign message..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                    />
+
+                    {/* Channel */}
+                    <select
+                      className="mt-3 w-full rounded-md border p-2 text-sm"
+                      value={channel}
+                      onChange={(e) => setChannel(e.target.value)}
+                    >
+                      <option value="sms">SMS</option>
+                      <option value="whatsapp">WhatsApp</option>
+                      <option value="ai">AI</option>
+                    </select>
+
+                    {/* Source */}
+                    <input
+                      className="mt-3 w-full rounded-md border p-2 text-sm"
+                      placeholder="Audience source (VIP, Retail...)"
+                      value={source}
+                      onChange={(e) => setSource(e.target.value)}
+                    />
+
+                    {/* Actions */}
+                    <div className="mt-5 flex justify-end gap-2">
+                      <button
+                        onClick={() => setIsModalOpen(false)}
+                        className="rounded-md border px-4 py-2 text-sm"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        disabled={loadingCampaign || !message}
+                        onClick={async () => {
+                          await createCampaign();
+                          setIsModalOpen(false);
+                        }}
+                        className="rounded-md bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+                      >
+                        {loadingCampaign ? "Sending..." : "Send campaign"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
         </section>

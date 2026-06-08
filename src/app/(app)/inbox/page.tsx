@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Archive,
   Bot,
@@ -13,24 +13,138 @@ import {
   StickyNote,
   UserRound,
 } from "lucide-react";
-import { conversations, customers } from "@/lib/mock-data";
+// import { conversations, customers } from "@/lib/mock-data";
 import { Badge, Button, Card } from "@/components/ui";
 
-export default function InboxPage() {
-  const [selectedConversation, setSelectedConversation] = useState(
-    conversations[0]
-  );
-  const [channel, setChannel] = useState("All");
-  const customer = customers.find(
-    (item) => item.id === selectedConversation.customerId
-  );
+type Message = {
+  id: string;
+  role: "agent" | "ai" | "customer";
+  text: string;
+  time: string;
+};
 
+type Conversation = {
+  id: string;
+  customer: string;
+  preview: string;
+  time: string;
+  status: string;
+  channel: string;
+  assignedAgent: string;
+  aiClassification: string;
+  summary: string;
+  messages: Message[];
+};
+
+export default function InboxPage() {
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [channel, setChannel] = useState("All");
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const filteredConversations = useMemo(() => {
     if (channel === "All") return conversations;
+
     return conversations.filter(
       (conversation) => conversation.channel === channel
     );
-  }, [channel]);
+  }, [channel, conversations]);
+
+  const [reply, setReply] = useState("");
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    async function fetchConversations() {
+      try {
+        setLoading(true);
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/conversations`,
+          {
+            credentials: "include",
+          }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error);
+
+        setConversations(data.conversations || []);
+      } catch (err) {
+        console.error("Failed to load conversations:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchConversations();
+  }, []);
+  useEffect(() => {
+    if (!selectedConversation && conversations.length > 0) {
+      setSelectedConversation(conversations[0]);
+    }
+  }, [conversations, selectedConversation]);
+  if (loading) {
+    return (
+      <div className="p-10 text-sm text-gray-500">Loading conversations...</div>
+    );
+  }
+
+  if (!selectedConversation) return null;
+
+  const customer = {
+    name: selectedConversation.customer,
+    phone: selectedConversation.customer_number,
+    email: selectedConversation.email,
+    status: selectedConversation.status,
+    last_active: selectedConversation.last_active,
+    tags: selectedConversation.tags || [],
+  };
+
+  const handleSendSms = async () => {
+    try {
+      setSending(true);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/conversations/send`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phoneNumber: selectedConversation.phone,
+            message: reply,
+            companyId: selectedConversation.company_id,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      console.log("SMS sent:", data);
+
+      // clear input
+      setReply("");
+
+      // refresh conversations
+      const refresh = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/conversations`,
+        {
+          credentials: "include",
+        }
+      );
+
+      const refreshed = await refresh.json();
+      setConversations(refreshed.conversations || []);
+    } catch (err: any) {
+      console.error("Failed to send SMS:", err.message);
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#f6f8fb] px-4 py-5 text-[#14213d] sm:px-6 lg:px-8">
@@ -180,7 +294,7 @@ export default function InboxPage() {
                 </div>
               </div>
 
-              {selectedConversation.messages.map((message) => {
+              {selectedConversation.messages.map((message: any) => {
                 const isAgent = message.role === "agent";
                 const isAi = message.role === "ai";
 
@@ -219,22 +333,24 @@ export default function InboxPage() {
             </div>
 
             <div className="border-t border-[#edf1f5] bg-white p-4">
-              {selectedConversation.aiSuggestions.length > 0 ? (
+              {(selectedConversation.aiSuggestions ?? []).length > 0 ? (
                 <div className="mb-4 space-y-2">
                   <div className="flex items-center gap-2 text-sm font-semibold">
                     <Bot size={16} className="text-[#4f46e5]" />
                     AI suggested replies
                   </div>
                   <div className="flex gap-2 overflow-x-auto pb-1">
-                    {selectedConversation.aiSuggestions.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        className="min-w-[260px] rounded-md border border-[#dbeafe] bg-[#eff6ff] px-3 py-2 text-left text-xs leading-5 text-[#1e3a8a] transition hover:border-[#4f46e5]/40"
-                        type="button"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
+                    {selectedConversation.aiSuggestions.map(
+                      (suggestion: any) => (
+                        <button
+                          key={suggestion}
+                          className="min-w-[260px] rounded-md border border-[#dbeafe] bg-[#eff6ff] px-3 py-2 text-left text-xs leading-5 text-[#1e3a8a] transition hover:border-[#4f46e5]/40"
+                          type="button"
+                        >
+                          {suggestion}
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -242,10 +358,16 @@ export default function InboxPage() {
                 <input
                   className="h-11 min-w-0 flex-1 rounded-md border border-[#d8e0e8] px-3 text-sm outline-none focus:border-[#16a34a]"
                   placeholder="Type a reply..."
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
                 />
-                <Button className="gap-2">
+                <Button
+                  className="gap-2"
+                  disabled={sending || !reply.trim()}
+                  onClick={handleSendSms}
+                >
                   <Send size={16} />
-                  Send
+                  {sending ? "Sending..." : "Send"}
                 </Button>
               </div>
             </div>
@@ -264,7 +386,7 @@ export default function InboxPage() {
                   <span className="flex h-11 w-11 items-center justify-center rounded-md bg-[#eef7f1] text-sm font-bold text-[#047857]">
                     {selectedConversation.customer
                       .split(" ")
-                      .map((part) => part[0])
+                      .map((part: any) => part[0])
                       .slice(0, 2)
                       .join("")}
                   </span>
@@ -281,7 +403,7 @@ export default function InboxPage() {
                 <InfoRow label="Status" value={customer?.status ?? "Unknown"} />
                 <InfoRow
                   label="Last activity"
-                  value={customer?.lastActive ?? selectedConversation.time}
+                  value={customer?.last_active ?? selectedConversation.time}
                 />
                 <InfoRow
                   label="Assigned agent"
@@ -292,7 +414,7 @@ export default function InboxPage() {
                     Tags
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {(customer?.tags ?? ["Conversation"]).map((tag) => (
+                    {(customer?.tags ?? ["Conversation"]).map((tag: any) => (
                       <Badge key={tag} tone={tag === "VIP" ? "amber" : "gray"}>
                         {tag}
                       </Badge>
