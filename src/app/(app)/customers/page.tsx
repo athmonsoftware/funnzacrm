@@ -12,7 +12,15 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
   const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("desc");
 
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [massSmsOpen, setMassSmsOpen] = useState(false);
+  const [massWhatsappOpen, setMassWhatsappOpen] = useState(false);
+
+  const [message, setMessage] = useState("");
+  const [targetChannel, setTargetChannel] = useState("sms");
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -21,22 +29,64 @@ export default function CustomersPage() {
     lastActive: "",
   });
 
-  // -----------------------------
-  // LOAD CUSTOMERS (LIKE CONVERSATIONS)
-  // -----------------------------
+  const handleMassSend = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/campaigns/sms/bulk`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          channel: targetChannel,
+          message,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error);
+      }
+
+      const data = await res.json();
+
+      alert(
+        `Campaign sent.\nTotal: ${data.total}\nSent: ${data.sent}\nFailed: ${data.failed}`
+      );
+
+      setMassSmsOpen(false);
+      setMassWhatsappOpen(false);
+      setMessage("");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to send campaign");
+    }
+  };
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/customers`, {
-          credentials: "include",
+        setLoading(true);
+
+        const params = new URLSearchParams({
+          sortBy,
+          order: sortOrder,
         });
+        if (sourceFilter) {
+          params.append("source", sourceFilter);
+        }
+
+        const res = await fetch(
+          `${API_BASE_URL}/api/customers?${params.toString()}`,
+          {
+            credentials: "include",
+          }
+        );
 
         if (!res.ok) throw new Error("Failed to fetch customers");
 
         const json = await res.json();
-        const data = json.customers || [];
 
-        setCustomers(data);
+        setCustomers(json.customers || []);
       } catch (err) {
         console.error("Failed to load customers:", err);
       } finally {
@@ -45,11 +95,8 @@ export default function CustomersPage() {
     }
 
     load();
-  }, []);
+  }, [sortBy, sortOrder, sourceFilter]);
 
-  // -----------------------------
-  // CREATE CUSTOMER
-  // -----------------------------
   const handleCreateCustomer = async (data: typeof form) => {
     const res = await fetch(`${API_BASE_URL}/api/customers`, {
       method: "POST",
@@ -101,18 +148,25 @@ export default function CustomersPage() {
   // -----------------------------
   const filteredCustomers = useMemo(() => {
     const value = query.trim().toLowerCase();
-    if (!value) return customers;
 
-    return customers.filter((customer) =>
-      [customer.name, customer.phone, customer.stage, customer.source]
-        .join(" ")
-        .toLowerCase()
-        .includes(value),
-    );
-  }, [query, customers]);
+    return customers.filter((customer) => {
+      const matchesSearch =
+        !value ||
+        [customer.name, customer.phone, customer.stage, customer.source]
+          .join(" ")
+          .toLowerCase()
+          .includes(value);
+
+      const matchesSource =
+        !sourceFilter ||
+        customer.source?.toLowerCase() === sourceFilter.toLowerCase();
+
+      return matchesSearch && matchesSource;
+    });
+  }, [query, customers, sourceFilter]);
 
   const handleCSVUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -186,6 +240,35 @@ export default function CustomersPage() {
         </div>
 
         <div className="flex w-full flex-col gap-2 lg:w-auto lg:flex-row lg:items-center">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="h-11 rounded-md border border-[#d8e0e8] px-3 text-sm"
+          >
+            <option value="created_at">Newest</option>
+            <option value="name">Name</option>
+            <option value="channel">Channel</option>
+            <option value="phone">Phone</option>
+          </select>
+
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="h-11 rounded-md border border-[#d8e0e8] px-3 text-sm"
+          >
+            <option value="desc">Desc</option>
+            <option value="asc">Asc</option>
+          </select>
+
+          <select
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value)}
+            className="h-11 rounded-md border border-[#d8e0e8] px-3 text-sm"
+          >
+            <option value="">All Channels</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="sms">SMS</option>
+          </select>
           {/* Search */}
           <label className="flex h-11 w-full items-center gap-2 rounded-md border border-[#d8e0e8] px-3 lg:w-80">
             <Search size={17} className="text-[#64748b]" />
@@ -197,7 +280,20 @@ export default function CustomersPage() {
             />
           </label>
 
-          {/* Add */}
+          <button
+            onClick={() => setMassSmsOpen(true)}
+            className="flex h-11 items-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-medium text-white"
+          >
+            Send SMS
+          </button>
+
+          {/* <button
+            onClick={() => setMassWhatsappOpen(true)}
+            className="flex h-11 items-center gap-2 rounded-md bg-green-600 px-4 text-sm font-medium text-white"
+          >
+            Send WhatsApp
+          </button> */}
+
           <button
             onClick={() => setIsModalOpen(true)}
             className="flex h-11 items-center gap-2 rounded-md bg-black px-4 text-sm font-medium text-white"
@@ -406,13 +502,54 @@ export default function CustomersPage() {
                 onClick={async () => {
                   await handleUpdateCustomer(
                     editingCustomer.id,
-                    editingCustomer,
+                    editingCustomer
                   );
                   setEditingCustomer(null);
                 }}
                 className="rounded bg-black px-3 py-1 text-sm text-white"
               >
                 Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {massSmsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-lg rounded-lg bg-white p-5">
+            <h3 className="text-lg font-semibold">Send Mass SMS</h3>
+
+            <select
+              value={targetChannel}
+              onChange={(e) => setTargetChannel(e.target.value)}
+              className="mt-4 w-full rounded border p-2"
+            >
+              <option value="sms">SMS Customers</option>
+              <option value="whatsapp">WhatsApp Customers</option>
+              <option value="facebook">Facebook Customers</option>
+            </select>
+
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="mt-3 w-full rounded border p-3"
+              rows={6}
+              placeholder="Enter message..."
+            />
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setMassSmsOpen(false)}
+                className="rounded border px-3 py-1"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleMassSend}
+                className="rounded bg-blue-600 px-3 py-1 text-white"
+              >
+                Send
               </button>
             </div>
           </div>
