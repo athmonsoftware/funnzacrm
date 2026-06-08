@@ -1,560 +1,290 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Search, Plus, Upload } from "lucide-react";
-import { Card, Badge } from "@/components/ui";
+import { useMemo, useState } from "react";
+import { Download, Filter, Search, Tags, Upload, UserPlus } from "lucide-react";
+import { customers, customerSegments, customerTags } from "@/lib/mock-data";
+import { Badge, Button, Card } from "@/components/ui";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const statusTone = {
+  Active: "green",
+  Inactive: "gray",
+  Churned: "red",
+} as const;
+
+function getStatusTone(status: string) {
+  return status in statusTone
+    ? statusTone[status as keyof typeof statusTone]
+    : "gray";
+}
 
 export default function CustomersPage() {
   const [query, setQuery] = useState("");
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [status, setStatus] = useState("All");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const [sourceFilter, setSourceFilter] = useState("");
-  const [massSmsOpen, setMassSmsOpen] = useState(false);
-  const [massWhatsappOpen, setMassWhatsappOpen] = useState(false);
-
-  const [message, setMessage] = useState("");
-  const [targetChannel, setTargetChannel] = useState("sms");
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    stage: "New",
-    source: "",
-    lastActive: "",
-  });
-
-  const handleMassSend = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/campaigns/sms/bulk`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          channel: targetChannel,
-          message,
-        }),
-      });
-
-      if (!res.ok) {
-        const error = await res.text();
-        throw new Error(error);
-      }
-
-      const data = await res.json();
-
-      alert(
-        `Campaign sent.\nTotal: ${data.total}\nSent: ${data.sent}\nFailed: ${data.failed}`
-      );
-
-      setMassSmsOpen(false);
-      setMassWhatsappOpen(false);
-      setMessage("");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to send campaign");
-    }
-  };
-  useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
-
-        const params = new URLSearchParams({
-          sortBy,
-          order: sortOrder,
-        });
-        if (sourceFilter) {
-          params.append("source", sourceFilter);
-        }
-
-        const res = await fetch(
-          `${API_BASE_URL}/api/customers?${params.toString()}`,
-          {
-            credentials: "include",
-          }
-        );
-
-        if (!res.ok) throw new Error("Failed to fetch customers");
-
-        const json = await res.json();
-
-        setCustomers(json.customers || []);
-      } catch (err) {
-        console.error("Failed to load customers:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
-  }, [sortBy, sortOrder, sourceFilter]);
-
-  const handleCreateCustomer = async (data: typeof form) => {
-    const res = await fetch(`${API_BASE_URL}/api/customers`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(data),
-    });
-
-    if (!res.ok) throw new Error("Failed to create customer");
-
-    const json = await res.json();
-
-    const newCustomer = json.customer;
-
-    setCustomers((prev) => [newCustomer, ...prev]);
-  };
-
-  const handleUpdateCustomer = async (id: string, data: any) => {
-    const res = await fetch(`${API_BASE_URL}/api/customers/${id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(data),
-    });
-
-    if (!res.ok) throw new Error("Failed to update customer");
-
-    const json = await res.json();
-
-    setCustomers((prev) => prev.map((c) => (c.id === id ? json.customer : c)));
-  };
-
-  const handleDeleteCustomer = async (id: string) => {
-    const res = await fetch(`${API_BASE_URL}/api/customers/${id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-
-    if (!res.ok) throw new Error("Failed to delete customer");
-
-    setCustomers((prev) => prev.filter((c) => c.id !== id));
-  };
-  // -----------------------------
-  // FILTER
-  // -----------------------------
   const filteredCustomers = useMemo(() => {
     const value = query.trim().toLowerCase();
 
     return customers.filter((customer) => {
       const matchesSearch =
         !value ||
-        [customer.name, customer.phone, customer.stage, customer.source]
+        [
+          customer.name,
+          customer.phone,
+          customer.email,
+          customer.status,
+          customer.assignedAgent ?? "Unassigned",
+          customer.tags.join(" "),
+        ]
           .join(" ")
           .toLowerCase()
           .includes(value);
+      const matchesStatus = status === "All" || customer.status === status;
 
-      const matchesSource =
-        !sourceFilter ||
-        customer.source?.toLowerCase() === sourceFilter.toLowerCase();
-
-      return matchesSearch && matchesSource;
+      return matchesSearch && matchesStatus;
     });
-  }, [query, customers, sourceFilter]);
+  }, [query, status]);
 
-  const handleCSVUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const visibleIds = filteredCustomers.map((customer) => customer.id);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
 
-    const reader = new FileReader();
+  function toggleCustomer(id: string) {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((selectedId) => selectedId !== id)
+        : [...current, id]
+    );
+  }
 
-    reader.onload = async (e) => {
-      try {
-        const text = e.target?.result as string;
+  function toggleVisible() {
+    setSelectedIds((current) => {
+      if (allVisibleSelected)
+        return current.filter((id) => !visibleIds.includes(id));
+      return Array.from(new Set([...current, ...visibleIds]));
+    });
+  }
 
-        const rows = text.split("\n").slice(1);
-
-        const parsedRows = rows
-          .filter(Boolean)
-          .map((row) => {
-            const [name, phone, stage, source, lastActive] = row.split(",");
-
-            return {
-              name: name?.trim(),
-              phone: phone?.trim(),
-              stage: stage?.trim() || "New",
-              source: source?.trim() || "csv",
-              lastActive: lastActive?.trim() || "",
-            };
-          })
-          .filter((r) => r.name && r.phone);
-
-        console.log("📤 Sending bulk rows:", parsedRows);
-
-        const res = await fetch(`${API_BASE_URL}/api/customers/bulk`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ rows: parsedRows }),
-        });
-
-        if (!res.ok) {
-          const errText = await res.text();
-          console.error("❌ Bulk upload failed:", errText);
-          throw new Error("Bulk upload failed");
-        }
-
-        const json = await res.json();
-
-        console.log("📦 Bulk upload response:", json);
-
-        // append real DB customers
-        setCustomers((prev) => [...json.inserted, ...prev]);
-      } catch (err) {
-        console.error("🔥 CSV upload error:", err);
-      }
-    };
-
-    reader.readAsText(file);
-  };
-
-  // -----------------------------
-  // UI
-  // -----------------------------
   return (
-    <Card>
-      {/* Header */}
-      <div className="flex flex-col gap-3 border-b border-[#edf1f5] p-5 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Customers and leads</h2>
-          <p className="mt-1 text-sm text-[#64748b]">
-            Track stages, source channels, and last activity.
-          </p>
-        </div>
+    <main className="min-h-screen bg-[#f6f8fb] px-4 py-5 text-[#14213d] sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-5">
+        <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-[#16a34a]">
+              Customer management
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">
+              Customer directory
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
+              Search, segment, assign, import, and export customer records
+              across SMS, WhatsApp, and AI-assisted support.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button tone="secondary" className="gap-2">
+              <Upload size={16} />
+              Import CSV
+            </Button>
+            <Button tone="secondary" className="gap-2">
+              <Download size={16} />
+              Export CSV
+            </Button>
+            <Button className="gap-2">
+              <UserPlus size={16} />
+              Add customer
+            </Button>
+          </div>
+        </section>
 
-        <div className="flex w-full flex-col gap-2 lg:w-auto lg:flex-row lg:items-center">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="h-11 rounded-md border border-[#d8e0e8] px-3 text-sm"
-          >
-            <option value="created_at">Newest</option>
-            <option value="name">Name</option>
-            <option value="channel">Channel</option>
-            <option value="phone">Phone</option>
-          </select>
+        <section className="grid gap-4 lg:grid-cols-3">
+          <Card className="p-4">
+            <p className="text-sm text-[#64748b]">Total customers</p>
+            <p className="mt-2 text-2xl font-semibold">
+              {customers.length.toLocaleString()}
+            </p>
+            <p className="mt-1 text-xs text-[#64748b]">
+              12 demo records ready for workflows
+            </p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-[#64748b]">Active customers</p>
+            <p className="mt-2 text-2xl font-semibold">
+              {
+                customers.filter((customer) => customer.status === "Active")
+                  .length
+              }
+            </p>
+            <p className="mt-1 text-xs text-[#64748b]">
+              Available for campaigns and assignment
+            </p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-[#64748b]">Top segment</p>
+            <p className="mt-2 text-2xl font-semibold">
+              {customerSegments[0].name}
+            </p>
+            <p className="mt-1 text-xs text-[#64748b]">
+              {customerSegments[0].count} customers in segment
+            </p>
+          </Card>
+        </section>
 
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className="h-11 rounded-md border border-[#d8e0e8] px-3 text-sm"
-          >
-            <option value="desc">Desc</option>
-            <option value="asc">Asc</option>
-          </select>
+        <Card>
+          <div className="flex flex-col gap-3 border-b border-[#edf1f5] p-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] xl:min-w-[620px]">
+              <label className="flex h-11 min-w-0 items-center gap-2 rounded-md border border-[#d8e0e8] bg-white px-3">
+                <Search size={17} className="text-[#64748b]" />
+                <input
+                  className="min-w-0 flex-1 text-sm outline-none"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search name, phone, email, tag, or agent"
+                />
+              </label>
+              <label className="flex h-11 items-center gap-2 rounded-md border border-[#d8e0e8] bg-white px-3 text-sm">
+                <Filter size={16} className="text-[#64748b]" />
+                <select
+                  className="bg-transparent text-sm outline-none"
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value)}
+                >
+                  {["All", "Active", "Inactive", "Churned"].map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-[#64748b]">
+                {selectedIds.length} selected
+              </span>
+              <Button
+                tone="secondary"
+                className="gap-2"
+                disabled={selectedIds.length === 0}
+              >
+                <Tags size={16} />
+                Apply tag
+              </Button>
+              <Button tone="secondary" disabled={selectedIds.length === 0}>
+                Assign agent
+              </Button>
+            </div>
+          </div>
 
-          <select
-            value={sourceFilter}
-            onChange={(e) => setSourceFilter(e.target.value)}
-            className="h-11 rounded-md border border-[#d8e0e8] px-3 text-sm"
-          >
-            <option value="">All Channels</option>
-            <option value="whatsapp">WhatsApp</option>
-            <option value="sms">SMS</option>
-          </select>
-          {/* Search */}
-          <label className="flex h-11 w-full items-center gap-2 rounded-md border border-[#d8e0e8] px-3 lg:w-80">
-            <Search size={17} className="text-[#64748b]" />
-            <input
-              className="min-w-0 flex-1 text-sm outline-none"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search customers"
-            />
-          </label>
-
-          <button
-            onClick={() => setMassSmsOpen(true)}
-            className="flex h-11 items-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-medium text-white"
-          >
-            Send SMS
-          </button>
-
-          {/* <button
-            onClick={() => setMassWhatsappOpen(true)}
-            className="flex h-11 items-center gap-2 rounded-md bg-green-600 px-4 text-sm font-medium text-white"
-          >
-            Send WhatsApp
-          </button> */}
-
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex h-11 items-center gap-2 rounded-md bg-black px-4 text-sm font-medium text-white"
-          >
-            <Plus size={16} />
-            Add Customer
-          </button>
-
-          {/* CSV */}
-          <label className="flex h-11 cursor-pointer items-center gap-2 rounded-md border border-[#d8e0e8] px-4 text-sm">
-            <Upload size={16} className="text-[#64748b]" />
-            Upload CSV
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleCSVUpload}
-              className="hidden"
-            />
-          </label>
-        </div>
-      </div>
-
-      {/* TABLE */}
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left text-sm">
-          <thead className="bg-[#f8fafc] text-xs uppercase tracking-[0.12em] text-[#64748b]">
-            <tr>
-              <th className="px-5 py-3 font-semibold">Name</th>
-              <th className="px-5 py-3 font-semibold">Phone</th>
-              <th className="px-5 py-3 font-semibold">Stage</th>
-              <th className="px-5 py-3 font-semibold">Source</th>
-              <th className="px-5 py-3 font-semibold">Last active</th>
-              <th className="px-5 py-3 font-semibold">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody className="divide-y divide-[#edf1f5]">
-            {loading ? (
-              <tr>
-                <td className="p-5 text-sm text-gray-500" colSpan={5}>
-                  Loading customers...
-                </td>
-              </tr>
-            ) : (
-              filteredCustomers.map((customer) => (
-                <tr key={customer.id}>
-                  <td className="px-5 py-4 font-semibold">{customer.name}</td>
-                  <td className="px-5 py-4 font-mono text-xs">
-                    {customer.phone}
-                  </td>
-                  <td className="px-5 py-4">
-                    <Badge>{customer.stage}</Badge>
-                  </td>
-                  <td className="px-5 py-4">{customer.source}</td>
-                  <td className="px-5 py-4 text-[#64748b]">
-                    {customer.lastActive || customer.last_active}
-                  </td>
-                  <td className="px-5 py-4 flex gap-2">
-                    <button
-                      className="text-blue-600 text-sm"
-                      onClick={() => setEditingCustomer(customer)}
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      className="text-red-600 text-sm"
-                      onClick={() => handleDeleteCustomer(customer.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1040px] text-left text-sm">
+              <thead className="bg-[#f8fafc] text-xs uppercase tracking-[0.12em] text-[#64748b]">
+                <tr>
+                  <th className="w-12 px-5 py-3">
+                    <input
+                      aria-label="Select all visible customers"
+                      checked={allVisibleSelected}
+                      onChange={toggleVisible}
+                      type="checkbox"
+                    />
+                  </th>
+                  <th className="px-5 py-3 font-semibold">Name</th>
+                  <th className="px-5 py-3 font-semibold">Phone number</th>
+                  <th className="px-5 py-3 font-semibold">Email</th>
+                  <th className="px-5 py-3 font-semibold">Tags</th>
+                  <th className="px-5 py-3 font-semibold">Status</th>
+                  <th className="px-5 py-3 font-semibold">Last activity</th>
+                  <th className="px-5 py-3 font-semibold">Assigned agent</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody className="divide-y divide-[#edf1f5]">
+                {filteredCustomers.map((customer) => (
+                  <tr key={customer.id} className="bg-white hover:bg-[#fbfdff]">
+                    <td className="px-5 py-4">
+                      <input
+                        aria-label={`Select ${customer.name}`}
+                        checked={selectedIds.includes(customer.id)}
+                        onChange={() => toggleCustomer(customer.id)}
+                        type="checkbox"
+                      />
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#eef7f1] text-xs font-bold text-[#047857]">
+                          {customer.name
+                            .split(" ")
+                            .map((part) => part[0])
+                            .slice(0, 2)
+                            .join("")}
+                        </span>
+                        <div>
+                          <p className="font-semibold">{customer.name}</p>
+                          <p className="mt-0.5 text-xs text-[#64748b]">
+                            {customer.source}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 font-mono text-xs">
+                      {customer.phone}
+                    </td>
+                    <td className="px-5 py-4 text-[#475569]">
+                      {customer.email}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex max-w-56 flex-wrap gap-1.5">
+                        {customer.tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            tone={tag === "VIP" ? "amber" : "gray"}
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <Badge tone={getStatusTone(customer.status)}>
+                        {customer.status}
+                      </Badge>
+                    </td>
+                    <td className="px-5 py-4 text-[#64748b]">
+                      {customer.lastActive}
+                    </td>
+                    <td className="px-5 py-4">
+                      {customer.assignedAgent ? (
+                        <span className="font-medium">
+                          {customer.assignedAgent}
+                        </span>
+                      ) : (
+                        <Badge tone="gray">Unassigned</Badge>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t border-[#edf1f5] px-5 py-4 text-sm text-[#64748b] sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              Showing{" "}
+              <span className="font-semibold text-[#14213d]">
+                {filteredCustomers.length}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-[#14213d]">
+                {customers.length}
+              </span>{" "}
+              customers
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {customerTags.slice(0, 5).map((tag) => (
+                <Badge key={tag.id} tone="gray">
+                  {tag.name} {tag.count}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </Card>
       </div>
-
-      {/* MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-lg">
-            <h3 className="text-lg font-semibold">Add Customer</h3>
-
-            <div className="mt-4 space-y-3">
-              <input
-                className="w-full rounded border p-2 text-sm"
-                placeholder="Name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-
-              <input
-                className="w-full rounded border p-2 text-sm"
-                placeholder="Phone"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-
-              <input
-                className="w-full rounded border p-2 text-sm"
-                placeholder="Source"
-                value={form.source}
-                onChange={(e) => setForm({ ...form, source: e.target.value })}
-              />
-
-              <input
-                className="w-full rounded border p-2 text-sm"
-                placeholder="Last Active"
-                value={form.lastActive}
-                onChange={(e) =>
-                  setForm({ ...form, lastActive: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="rounded border px-3 py-1 text-sm"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={async () => {
-                  await handleCreateCustomer(form);
-                  setIsModalOpen(false);
-                  setForm({
-                    name: "",
-                    phone: "",
-                    stage: "New",
-                    source: "",
-                    lastActive: "",
-                  });
-                }}
-                className="rounded bg-black px-3 py-1 text-sm text-white"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {editingCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-lg">
-            <h3 className="text-lg font-semibold">Edit Customer</h3>
-
-            <div className="mt-4 space-y-3">
-              <input
-                className="w-full rounded border p-2 text-sm"
-                value={editingCustomer.name || ""}
-                onChange={(e) =>
-                  setEditingCustomer({
-                    ...editingCustomer,
-                    name: e.target.value,
-                  })
-                }
-              />
-
-              <input
-                className="w-full rounded border p-2 text-sm"
-                value={editingCustomer.phone || ""}
-                onChange={(e) =>
-                  setEditingCustomer({
-                    ...editingCustomer,
-                    phone: e.target.value,
-                  })
-                }
-              />
-
-              <input
-                className="w-full rounded border p-2 text-sm"
-                value={editingCustomer.stage || ""}
-                onChange={(e) =>
-                  setEditingCustomer({
-                    ...editingCustomer,
-                    stage: e.target.value,
-                  })
-                }
-              />
-
-              <input
-                className="w-full rounded border p-2 text-sm"
-                value={editingCustomer.source || ""}
-                onChange={(e) =>
-                  setEditingCustomer({
-                    ...editingCustomer,
-                    source: e.target.value,
-                  })
-                }
-              />
-            </div>
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                onClick={() => setEditingCustomer(null)}
-                className="rounded border px-3 py-1 text-sm"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={async () => {
-                  await handleUpdateCustomer(
-                    editingCustomer.id,
-                    editingCustomer
-                  );
-                  setEditingCustomer(null);
-                }}
-                className="rounded bg-black px-3 py-1 text-sm text-white"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {massSmsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-lg rounded-lg bg-white p-5">
-            <h3 className="text-lg font-semibold">Send Mass SMS</h3>
-
-            <select
-              value={targetChannel}
-              onChange={(e) => setTargetChannel(e.target.value)}
-              className="mt-4 w-full rounded border p-2"
-            >
-              <option value="sms">SMS Customers</option>
-              <option value="whatsapp">WhatsApp Customers</option>
-              <option value="facebook">Facebook Customers</option>
-            </select>
-
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="mt-3 w-full rounded border p-3"
-              rows={6}
-              placeholder="Enter message..."
-            />
-
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                onClick={() => setMassSmsOpen(false)}
-                className="rounded border px-3 py-1"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleMassSend}
-                className="rounded bg-blue-600 px-3 py-1 text-white"
-              >
-                Send
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </Card>
+    </main>
   );
 }
