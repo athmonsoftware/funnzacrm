@@ -9,6 +9,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { Badge, Button, Card, SectionHeader } from "@/components/ui";
+import toast from "react-hot-toast";
 
 type Doc = {
   id: string;
@@ -76,9 +77,12 @@ export default function KnowledgeBasePage() {
       if (!res.ok) throw new Error(data?.error || "Upload failed");
 
       await fetchDocs();
+      toast.success("Document uploaded successfully");
     } catch (err) {
       console.error(err);
-      alert("Upload failed");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to upload document"
+      );
     } finally {
       setUploading(false);
     }
@@ -100,9 +104,10 @@ export default function KnowledgeBasePage() {
       if (!res.ok) throw new Error("Delete failed");
 
       setItems((prev) => prev.filter((d) => d.id !== id));
+      toast.success("Document deleted");
     } catch (err) {
       console.error(err);
-      alert("Failed to delete");
+      toast.error("Failed to delete document");
     }
   };
 
@@ -165,10 +170,28 @@ export default function KnowledgeBasePage() {
             ref={fileInputRef}
             type="file"
             hidden
-            accept="application/pdf"
+            accept=".pdf,.docx,.xlsx,.csv,.txt,.md"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) uploadFile(file);
+              if (!file) return;
+
+              const allowedExtensions = [
+                "pdf",
+                "docx",
+                "xlsx",
+                "csv",
+                "txt",
+                "md",
+              ];
+
+              const ext = file.name.split(".").pop()?.toLowerCase();
+
+              if (!ext || !allowedExtensions.includes(ext)) {
+                toast.error("Supported file types: PDF, DOCX and XLSX");
+                return;
+              }
+
+              uploadFile(file);
             }}
           />
         </section>
