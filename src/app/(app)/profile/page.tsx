@@ -4,8 +4,8 @@ import { headers } from "next/headers";
 
 function ProfileLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-[#edf1f5] pb-3 last:border-0">
-      <span className="text-[#64748b]">{label}</span>
+    <div className="flex items-center justify-between gap-3 border-b border-border pb-3 last:border-0">
+      <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold">{value}</span>
     </div>
   );
@@ -75,12 +75,12 @@ export default async function ProfilePage() {
     <section className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
       {/* LEFT CARD */}
       <Card className="p-5">
-        <div className="grid size-16 place-items-center rounded-md bg-[#e8f6ef] text-2xl font-bold text-[#047857]">
+        <div className="grid size-16 place-items-center rounded-md bg-funza-primary-light text-2xl font-bold text-funza-primary">
           {initials}
         </div>
 
         <h2 className="mt-4 text-xl font-semibold">{profile.full_name}</h2>
-        <p className="mt-1 text-sm text-[#64748b]">{profile.email}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
 
         <div className="mt-4 space-y-3">
           <ProfileLine

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "react-hot-toast";
+import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -32,6 +33,12 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
     >
       <body className="min-h-full flex flex-col">
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
         {children}
         <Toaster
           position="top-right"
@@ -47,6 +54,7 @@ export default function RootLayout({
             error: { iconTheme: { primary: "#dc2626", secondary: "white" } },
           }}
         />
+        </ThemeProvider>
       </body>
     </html>
   );

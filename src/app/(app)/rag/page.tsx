@@ -143,8 +143,8 @@ export default function RagUploadPage() {
       <div className="grid grid-cols-1 gap-6 p-5 lg:grid-cols-2">
         {/* ---------------- UPLOAD ---------------- */}
         <form onSubmit={handleUpload} className="space-y-4">
-          <div className="relative rounded-lg border border-dashed p-8 text-center hover:bg-gray-50">
-            <Upload className="mx-auto mb-2 text-gray-500" />
+          <div className="relative rounded-lg border border-dashed p-8 text-center hover:bg-muted">
+            <Upload className="mx-auto mb-2 text-muted-foreground" />
 
             <input
               type="file"
@@ -152,7 +152,7 @@ export default function RagUploadPage() {
               onChange={(e) => setRagFile(e.target.files?.[0] || null)}
             />
 
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               {ragFile?.name || "Drop or select PDF / TXT / DOC"}
             </p>
           </div>
@@ -160,7 +160,7 @@ export default function RagUploadPage() {
           <Button
             type="submit"
             disabled={!ragFile || uploading}
-            className="bg-black text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+            className="disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => console.log("button clicked")}
           >
             {uploading ? "Uploading..." : "Upload Document"}
@@ -169,14 +169,14 @@ export default function RagUploadPage() {
 
         {/* ---------------- DOCUMENT LIST ---------------- */}
         <div className="rounded-lg border p-4">
-          <h3 className="mb-3 text-sm font-semibold text-gray-700">
+          <h3 className="mb-3 text-sm font-semibold text-foreground">
             Uploaded Documents
           </h3>
 
           {loading ? (
-            <p className="text-sm text-gray-500">Loading...</p>
+            <p className="text-sm text-muted-foreground">Loading...</p>
           ) : docs.length === 0 ? (
-            <p className="text-sm text-gray-500">No documents uploaded yet</p>
+            <p className="text-sm text-muted-foreground">No documents uploaded yet</p>
           ) : (
             <ul className="space-y-2">
               {docs.map((doc) => (
@@ -185,10 +185,10 @@ export default function RagUploadPage() {
                   className="flex items-center justify-between rounded border px-3 py-2"
                 >
                   <div className="flex items-center gap-2">
-                    <FileText size={16} className="text-gray-500" />
+                    <FileText size={16} className="text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">{doc.filename}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {new Date(doc.created_at).toLocaleString()}
                       </p>
                     </div>
@@ -208,7 +208,7 @@ export default function RagUploadPage() {
 
         {/* ---------------- RAG TEST ---------------- */}
         <div className="mt-6 border-t pt-4">
-          <h3 className="mb-2 text-sm font-semibold text-gray-700">Test RAG</h3>
+          <h3 className="mb-2 text-sm font-semibold text-foreground">Test RAG</h3>
 
           <div className="flex gap-2">
             <input
@@ -220,13 +220,12 @@ export default function RagUploadPage() {
                 }
               }}
               placeholder="Ask something from your documents..."
-              className="w-full rounded border px-3 py-2 text-sm"
+              className="w-full rounded border border-border bg-background px-3 py-2 text-sm text-foreground"
             />
 
             <Button
               onClick={handleAskRag}
               disabled={asking || !query}
-              className="bg-blue-600 text-white"
             >
               {asking ? "Thinking..." : "Ask"}
             </Button>
@@ -234,23 +233,23 @@ export default function RagUploadPage() {
 
           {answer && (
             <div className="mt-4 space-y-3">
-              <div className="rounded border bg-gray-50 p-4">
+              <div className="rounded border border-border bg-muted p-4">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="font-semibold text-gray-900">Answer</p>
+                  <p className="font-semibold text-foreground">Answer</p>
 
                   {isFallback && (
-                    <span className="rounded bg-yellow-100 px-2 py-1 text-xs text-yellow-800">
+                    <span className="rounded bg-yellow-100 px-2 py-1 text-xs text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
                       Fallback Mode
                     </span>
                   )}
                 </div>
 
-                <div className="whitespace-pre-wrap text-sm text-gray-700">
+                <div className="whitespace-pre-wrap text-sm text-foreground">
                   {answer}
                 </div>
 
                 {queryId && (
-                  <div className="mt-3 border-t pt-2 text-xs text-gray-500">
+                  <div className="mt-3 border-t border-border pt-2 text-xs text-muted-foreground">
                     Query ID: {queryId}
                   </div>
                 )}
@@ -258,7 +257,7 @@ export default function RagUploadPage() {
 
               {sources.length > 0 && (
                 <div className="rounded border p-4">
-                  <h4 className="mb-3 font-semibold text-gray-900">
+                  <h4 className="mb-3 font-semibold text-foreground">
                     Retrieved Sources ({sources.length})
                   </h4>
 
@@ -266,19 +265,19 @@ export default function RagUploadPage() {
                     {sources.map((source, index) => (
                       <div
                         key={`${source.documentId}-${index}`}
-                        className="rounded bg-gray-50 p-3"
+                        className="rounded bg-muted p-3"
                       >
                         <div className="mb-2 flex items-center justify-between">
-                          <span className="text-xs font-medium text-blue-600">
+                          <span className="text-xs font-medium text-funza-accent">
                             Source {index + 1}
                           </span>
 
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             Similarity: {(source.similarity * 100).toFixed(1)}%
                           </span>
                         </div>
 
-                        <p className="line-clamp-5 text-sm text-gray-700">
+                        <p className="line-clamp-5 text-sm text-foreground">
                           {source.content}
                         </p>
                       </div>

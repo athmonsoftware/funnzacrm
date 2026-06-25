@@ -6,13 +6,13 @@ export default function TeamsPage() {
   const memberById = new Map(teamMembers.map((member) => [member.id, member]))
 
   return (
-    <main className="min-h-screen bg-[#f6f8fb] px-4 py-5 text-[#14213d] sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#16a34a]">Team management</p>
+            <p className="text-sm font-semibold text-funza-primary">Team management</p>
             <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">Teams</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Organize agents into sales, support, and operations teams for assignment workflows.
             </p>
           </div>
@@ -25,11 +25,11 @@ export default function TeamsPage() {
 
             return (
               <Card key={team.id}>
-                <SectionHeader title={team.name} action={<Building2 size={18} className="text-[#16a34a]" />} />
+                <SectionHeader title={team.name} action={<Building2 size={18} className="text-funza-primary" />} />
                 <div className="space-y-4 p-5">
-                  <p className="text-sm leading-6 text-[#64748b]">{team.description}</p>
-                  <div className="rounded-md border border-[#edf1f5] p-3">
-                    <p className="text-xs uppercase tracking-[0.12em] text-[#64748b]">Team lead</p>
+                  <p className="text-sm leading-6 text-muted-foreground">{team.description}</p>
+                  <div className="rounded-md border border-border p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Team lead</p>
                     <p className="mt-1 font-semibold">{lead?.name ?? "Unassigned"}</p>
                   </div>
                   <div>
