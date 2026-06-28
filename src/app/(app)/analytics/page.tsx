@@ -13,12 +13,12 @@ import { Badge, Card, ProgressBar, SectionHeader } from "@/components/ui"
 
 export default function AnalyticsPage() {
   return (
-    <main className="min-h-screen bg-[#f6f8fb] px-4 py-5 text-[#14213d] sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <section>
-          <p className="text-sm font-semibold text-[#16a34a]">Analytics center</p>
+          <p className="text-sm font-semibold text-funza-primary">Analytics center</p>
           <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">Business intelligence</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
             Track customer growth, conversation performance, AI automation, and revenue signals from one workspace.
           </p>
         </section>
@@ -34,8 +34,8 @@ export default function AnalyticsPage() {
           <Card>
             <SectionHeader title="Growth and revenue trends" />
             <div className="grid gap-5 p-5 lg:grid-cols-2">
-              <MiniBarChart title="Customer growth" data={customerGrowthData.map((item) => ({ label: item.month, value: item.customers }))} color="bg-[#16a34a]" />
-              <MiniBarChart title="Revenue" data={revenueData.map((item) => ({ label: item.month, value: item.revenue }))} color="bg-[#4f46e5]" />
+              <MiniBarChart title="Customer growth" data={customerGrowthData.map((item) => ({ label: item.month, value: item.customers }))} color="bg-funza-primary" />
+              <MiniBarChart title="Revenue" data={revenueData.map((item) => ({ label: item.month, value: item.revenue }))} color="bg-funza-accent" />
             </div>
           </Card>
 
@@ -44,8 +44,8 @@ export default function AnalyticsPage() {
             <div className="space-y-5 p-5">
               <HealthRow icon={TrendingUp} label="Returning customers" value={analyticsCustomer.newVsReturning.returning} total={analyticsCustomer.newVsReturning.new + analyticsCustomer.newVsReturning.returning} />
               <HealthRow icon={TrendingDown} label="New customers" value={analyticsCustomer.newVsReturning.new} total={analyticsCustomer.newVsReturning.new + analyticsCustomer.newVsReturning.returning} />
-              <div className="rounded-md border border-[#edf1f5] p-4">
-                <p className="text-sm text-[#64748b]">Churn</p>
+              <div className="rounded-md border border-border p-4">
+                <p className="text-sm text-muted-foreground">Churn</p>
                 <div className="mt-2 flex items-end justify-between gap-3">
                   <p className="text-2xl font-semibold">{analyticsCustomer.churn}%</p>
                   <Badge tone="green">{analyticsCustomer.churnChange}</Badge>
@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
               {Object.entries(analyticsConversation.channelBreakdown).map(([channel, value]) => (
                 <div key={channel}>
                   <div className="mb-2 flex justify-between text-sm">
-                    <span className="capitalize text-[#64748b]">{channel}</span>
+                    <span className="capitalize text-muted-foreground">{channel}</span>
                     <span className="font-semibold">{value}%</span>
                   </div>
                   <ProgressBar value={value} />
@@ -82,7 +82,7 @@ export default function AnalyticsPage() {
               {analyticsAI.topIntents.slice(0, 4).map((intent) => (
                 <div key={intent.intent}>
                   <div className="mb-2 flex justify-between text-sm">
-                    <span className="text-[#64748b]">{intent.intent}</span>
+                    <span className="text-muted-foreground">{intent.intent}</span>
                     <span className="font-semibold">{intent.pct}%</span>
                   </div>
                   <ProgressBar value={intent.pct} />
@@ -93,15 +93,15 @@ export default function AnalyticsPage() {
 
           <Card>
             <SectionHeader title="Revenue analytics" action={<Badge tone="blue">{analyticsRevenue.totalRevenue}</Badge>} />
-            <div className="divide-y divide-[#edf1f5]">
+            <div className="divide-y divide-border">
               {analyticsRevenue.revenueByPlan.map((plan) => (
                 <div key={plan.plan} className="px-5 py-4">
                   <div className="mb-2 flex items-center justify-between gap-3 text-sm">
                     <span className="font-semibold">{plan.plan}</span>
-                    <span className="text-[#64748b]">{plan.customers} customers</span>
+                    <span className="text-muted-foreground">{plan.customers} customers</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#64748b]">Revenue</span>
+                    <span className="text-muted-foreground">Revenue</span>
                     <span className="font-semibold">GHS {plan.revenue.toLocaleString()}</span>
                   </div>
                 </div>
@@ -119,12 +119,12 @@ export default function AnalyticsPage() {
 
               return (
                 <div key={item.month} className="flex flex-1 flex-col items-center gap-2">
-                  <div className="flex h-52 w-full flex-col justify-end overflow-hidden rounded-md bg-[#f1f5f9]">
-                    <div className="bg-[#4f46e5]" style={{ height: `${(item.ai / max) * 100}%` }} />
-                    <div className="bg-[#16a34a]" style={{ height: `${(item.whatsapp / max) * 100}%` }} />
-                    <div className="bg-[#0f766e]" style={{ height: `${(item.sms / max) * 100}%` }} />
+                  <div className="flex h-52 w-full flex-col justify-end overflow-hidden rounded-md bg-muted">
+                    <div className="bg-funza-accent" style={{ height: `${(item.ai / max) * 100}%` }} />
+                    <div className="bg-funza-primary" style={{ height: `${(item.whatsapp / max) * 100}%` }} />
+                    <div className="bg-teal-600 dark:bg-teal-500" style={{ height: `${(item.sms / max) * 100}%` }} />
                   </div>
-                  <span className="text-xs text-[#64748b]">{item.month}</span>
+                  <span className="text-xs text-muted-foreground">{item.month}</span>
                   <span className="sr-only">{total} total messages</span>
                 </div>
               )
@@ -140,12 +140,12 @@ function Metric({ icon: Icon, label, value, change }: { icon: ElementType; label
   return (
     <Card className="p-4">
       <div className="flex items-start justify-between gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-[#eef7f1] text-[#16a34a]">
+        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-funza-primary-light text-funza-primary">
           <Icon size={18} />
         </span>
         <Badge tone="green">{change}</Badge>
       </div>
-      <p className="mt-4 text-sm text-[#64748b]">{label}</p>
+      <p className="mt-4 text-sm text-muted-foreground">{label}</p>
       <p className="mt-2 text-2xl font-semibold tracking-normal">{value}</p>
     </Card>
   )
@@ -155,15 +155,15 @@ function MiniBarChart({ title, data, color }: { title: string; data: { label: st
   const max = Math.max(...data.map((item) => item.value))
 
   return (
-    <div className="rounded-md border border-[#edf1f5] p-4">
+    <div className="rounded-md border border-border p-4">
       <h2 className="font-semibold">{title}</h2>
       <div className="mt-5 flex h-48 items-end gap-2">
         {data.map((item) => (
           <div key={item.label} className="flex flex-1 flex-col items-center gap-2">
-            <div className="flex h-40 w-full items-end rounded-md bg-[#f1f5f9]">
+            <div className="flex h-40 w-full items-end rounded-md bg-muted">
               <div className={`w-full rounded-md ${color}`} style={{ height: `${(item.value / max) * 100}%` }} />
             </div>
-            <span className="text-xs text-[#64748b]">{item.label}</span>
+            <span className="text-xs text-muted-foreground">{item.label}</span>
           </div>
         ))}
       </div>
@@ -177,7 +177,7 @@ function HealthRow({ icon: Icon, label, value, total }: { icon: ElementType; lab
   return (
     <div>
       <div className="mb-2 flex items-center justify-between text-sm">
-        <span className="flex items-center gap-2 text-[#64748b]">
+        <span className="flex items-center gap-2 text-muted-foreground">
           <Icon size={15} />
           {label}
         </span>
@@ -190,8 +190,8 @@ function HealthRow({ icon: Icon, label, value, total }: { icon: ElementType; lab
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md border border-[#edf1f5] p-3 text-sm">
-      <span className="text-[#64748b]">{label}</span>
+    <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm">
+      <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold">{value}</span>
     </div>
   )

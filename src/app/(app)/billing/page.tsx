@@ -7,7 +7,7 @@ export default function BillingPage() {
       <SectionHeader title="Billing history" />
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="bg-[#f8fafc] text-xs uppercase tracking-[0.12em] text-[#64748b]">
+          <thead className="bg-muted text-xs uppercase tracking-[0.12em] text-muted-foreground">
             <tr>
               <th className="px-5 py-3">Invoice</th>
               <th className="px-5 py-3">Date</th>
@@ -16,7 +16,7 @@ export default function BillingPage() {
               <th className="px-5 py-3">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#edf1f5]">
+          <tbody className="divide-y divide-border">
             {billingHistory.map((invoice) => (
               <tr key={invoice.id}>
                 <td className="px-5 py-4 font-mono text-xs">{invoice.id}</td>

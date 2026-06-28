@@ -85,7 +85,7 @@ export default function InboxPage() {
   }, [conversations, selectedConversation]);
   if (loading) {
     return (
-      <div className="p-10 text-sm text-gray-500">Loading conversations...</div>
+      <div className="p-10 text-sm text-muted-foreground">Loading conversations...</div>
     );
   }
 
@@ -147,17 +147,17 @@ export default function InboxPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f6f8fb] px-4 py-5 text-[#14213d] sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#16a34a]">
+            <p className="text-sm font-semibold text-funza-primary">
               Conversation center
             </p>
             <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">
               Unified inbox
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Manage SMS, WhatsApp, and AI conversations with suggested replies
               and customer context in one view.
             </p>
@@ -168,8 +168,8 @@ export default function InboxPage() {
                 key={item}
                 className={`h-10 rounded-md border px-4 text-sm font-semibold transition ${
                   channel === item
-                    ? "border-[#16a34a] bg-[#16a34a] text-white"
-                    : "border-[#d8e0e8] bg-white text-[#14213d] hover:bg-[#f8fafc]"
+                    ? "border-funza-primary bg-funza-primary text-white"
+                    : "border-border bg-card text-foreground hover:bg-muted"
                 }`}
                 onClick={() => setChannel(item)}
                 type="button"
@@ -182,12 +182,12 @@ export default function InboxPage() {
 
         <section className="grid min-h-[calc(100vh-220px)] gap-5 xl:grid-cols-[340px_minmax(0,1fr)_320px]">
           <Card className="overflow-hidden">
-            <div className="border-b border-[#edf1f5] px-5 py-4">
+            <div className="border-b border-border px-5 py-4">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-semibold">Open conversations</h2>
                 <Badge tone="blue">{filteredConversations.length}</Badge>
               </div>
-              <p className="mt-1 text-sm text-[#64748b]">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Prioritized by unread and escalation risk.
               </p>
             </div>
@@ -198,8 +198,8 @@ export default function InboxPage() {
                 return (
                   <button
                     key={conversation.id}
-                    className={`block w-full border-b border-[#edf1f5] px-4 py-4 text-left transition ${
-                      selected ? "bg-[#eef7f1]" : "bg-white hover:bg-[#f8fafc]"
+                    className={`block w-full border-b border-border px-4 py-4 text-left transition ${
+                      selected ? "bg-funza-primary-light" : "bg-card hover:bg-muted"
                     }`}
                     onClick={() => setSelectedConversation(conversation)}
                     type="button"
@@ -211,14 +211,14 @@ export default function InboxPage() {
                             {conversation.customer}
                           </p>
                           {conversation.unread ? (
-                            <span className="h-2 w-2 shrink-0 rounded-full bg-[#16a34a]" />
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-funza-primary" />
                           ) : null}
                         </div>
-                        <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#64748b]">
+                        <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted-foreground">
                           {conversation.preview}
                         </p>
                       </div>
-                      <span className="shrink-0 text-xs text-[#64748b]">
+                      <span className="shrink-0 text-xs text-muted-foreground">
                         {conversation.time}
                       </span>
                     </div>
@@ -245,7 +245,7 @@ export default function InboxPage() {
           </Card>
 
           <Card className="flex min-h-[620px] flex-col overflow-hidden">
-            <div className="border-b border-[#edf1f5] px-5 py-4">
+            <div className="border-b border-border px-5 py-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -263,7 +263,7 @@ export default function InboxPage() {
                     </Badge>
                     <Badge tone="blue">{selectedConversation.channel}</Badge>
                   </div>
-                  <p className="mt-1 text-sm text-[#64748b]">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Assigned to {selectedConversation.assignedAgent} ·{" "}
                     {selectedConversation.aiClassification}
                   </p>
@@ -282,12 +282,12 @@ export default function InboxPage() {
             </div>
 
             <div className="flex-1 space-y-4 overflow-y-auto p-5">
-              <div className="rounded-md border border-[#dbeafe] bg-[#eff6ff] p-4">
+              <div className="rounded-md border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 p-4">
                 <div className="flex items-start gap-3">
-                  <Sparkles className="mt-0.5 text-[#4f46e5]" size={18} />
+                  <Sparkles className="mt-0.5 text-funza-accent" size={18} />
                   <div>
                     <p className="text-sm font-semibold">AI summary</p>
-                    <p className="mt-1 text-sm leading-6 text-[#475569]">
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
                       {selectedConversation.summary}
                     </p>
                   </div>
@@ -308,10 +308,10 @@ export default function InboxPage() {
                     <div
                       className={`max-w-[86%] rounded-md px-4 py-3 text-sm leading-6 shadow-sm ${
                         isAgent
-                          ? "bg-[#101828] text-white"
+                          ? "bg-foreground text-background"
                           : isAi
-                          ? "border border-[#dbeafe] bg-[#eff6ff] text-[#1e3a8a]"
-                          : "border border-[#edf1f5] bg-white text-[#14213d]"
+                          ? "border border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200"
+                          : "border border-border bg-card text-foreground"
                       }`}
                     >
                       <div className="mb-1 flex items-center gap-2 text-xs opacity-75">
@@ -332,11 +332,11 @@ export default function InboxPage() {
               })}
             </div>
 
-            <div className="border-t border-[#edf1f5] bg-white p-4">
+            <div className="border-t border-border bg-card p-4">
               {(selectedConversation.aiSuggestions ?? []).length > 0 ? (
                 <div className="mb-4 space-y-2">
                   <div className="flex items-center gap-2 text-sm font-semibold">
-                    <Bot size={16} className="text-[#4f46e5]" />
+                    <Bot size={16} className="text-funza-accent" />
                     AI suggested replies
                   </div>
                   <div className="flex gap-2 overflow-x-auto pb-1">
@@ -344,7 +344,7 @@ export default function InboxPage() {
                       (suggestion: any) => (
                         <button
                           key={suggestion}
-                          className="min-w-[260px] rounded-md border border-[#dbeafe] bg-[#eff6ff] px-3 py-2 text-left text-xs leading-5 text-[#1e3a8a] transition hover:border-[#4f46e5]/40"
+                          className="min-w-[260px] rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-left text-xs leading-5 text-blue-900 transition hover:border-funza-accent/40 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200"
                           type="button"
                         >
                           {suggestion}
@@ -356,7 +356,7 @@ export default function InboxPage() {
               ) : null}
               <div className="flex gap-3">
                 <input
-                  className="h-11 min-w-0 flex-1 rounded-md border border-[#d8e0e8] px-3 text-sm outline-none focus:border-[#16a34a]"
+                  className="h-11 min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-funza-primary"
                   placeholder="Type a reply..."
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}
@@ -375,15 +375,15 @@ export default function InboxPage() {
 
           <aside className="grid gap-5">
             <Card>
-              <div className="border-b border-[#edf1f5] px-5 py-4">
+              <div className="border-b border-border px-5 py-4">
                 <h2 className="font-semibold">Customer information</h2>
-                <p className="mt-1 text-sm text-[#64748b]">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Profile, tags, payment signals, and AI insight.
                 </p>
               </div>
               <div className="space-y-4 p-5">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-md bg-[#eef7f1] text-sm font-bold text-[#047857]">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-md bg-funza-primary-light text-sm font-bold text-funza-primary">
                     {selectedConversation.customer
                       .split(" ")
                       .map((part: any) => part[0])
@@ -394,7 +394,7 @@ export default function InboxPage() {
                     <p className="font-semibold">
                       {selectedConversation.customer}
                     </p>
-                    <p className="truncate text-sm text-[#64748b]">
+                    <p className="truncate text-sm text-muted-foreground">
                       {customer?.email ?? "No email on file"}
                     </p>
                   </div>
@@ -410,7 +410,7 @@ export default function InboxPage() {
                   value={selectedConversation.assignedAgent}
                 />
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                     Tags
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -425,7 +425,7 @@ export default function InboxPage() {
             </Card>
 
             <Card>
-              <div className="border-b border-[#edf1f5] px-5 py-4">
+              <div className="border-b border-border px-5 py-4">
                 <h2 className="font-semibold">Agent tools</h2>
               </div>
               <div className="space-y-3 p-5">
@@ -460,8 +460,8 @@ export default function InboxPage() {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-t border-[#edf1f5] pt-3 text-sm">
-      <span className="text-[#64748b]">{label}</span>
+    <div className="flex items-center justify-between gap-3 border-t border-border pt-3 text-sm">
+      <span className="text-muted-foreground">{label}</span>
       <span className="min-w-0 truncate text-right font-medium">{value}</span>
     </div>
   );
@@ -478,15 +478,15 @@ function ToolRow({
 }) {
   return (
     <button
-      className="flex w-full items-center gap-3 rounded-md border border-[#edf1f5] p-3 text-left transition hover:bg-[#f8fafc]"
+      className="flex w-full items-center gap-3 rounded-md border border-border p-3 text-left transition hover:bg-muted"
       type="button"
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#f1f5f9] text-[#14213d]">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-foreground">
         <Icon size={16} />
       </span>
       <span className="min-w-0">
         <span className="block text-sm font-semibold">{label}</span>
-        <span className="block truncate text-xs text-[#64748b]">{value}</span>
+        <span className="block truncate text-xs text-muted-foreground">{value}</span>
       </span>
     </button>
   );

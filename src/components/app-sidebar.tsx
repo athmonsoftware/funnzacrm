@@ -3,6 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { dashboardModules } from "@/config/modules";
+import { canAccessModule } from "@/features/access/module-access";
 import { useWorkspace, type WorkspaceType } from "@/lib/workspace-context";
 
 import {
@@ -21,16 +23,13 @@ import {
 import {
   LayoutDashboard,
   UsersRound,
-  UserRound,
   Inbox,
-  MessageSquareText,
   MessageCircle,
   Bot,
   Archive,
   BookOpen,
   FileText,
   Settings2,
-  BarChart3,
   Wallet,
   CreditCard,
   Receipt,
@@ -43,8 +42,6 @@ import {
   Lock,
   Plug,
   ChevronRight,
-  LogOut,
-  Tags,
   Layers,
   Smartphone,
 } from "lucide-react";
@@ -86,13 +83,6 @@ const navSections: NavSection[] = [
         icon: UsersRound,
         url: "/customers",
       },
-      {
-        id: "segments",
-        label: "Segments",
-        icon: Layers,
-        url: "/customers/segments",
-      },
-      { id: "tags", label: "Tags", icon: Tags, url: "/customers/tags" },
     ],
   },
   {
@@ -107,12 +97,6 @@ const navSections: NavSection[] = [
         url: "/inbox/whatsapp",
       },
       {
-        id: "ai-conversations",
-        label: "AI Conversations",
-        icon: Bot,
-        url: "/inbox/ai",
-      },
-      {
         id: "archived",
         label: "Archived",
         icon: Archive,
@@ -123,24 +107,17 @@ const navSections: NavSection[] = [
   {
     title: "AI Center",
     items: [
-      { id: "ai", label: "AI Assistant", icon: Sparkles, url: "/ai" },
       {
-        id: "knowledge-base",
-        label: "Knowledge Base",
+        id: "ai-assistant",
+        label: "AI Assistant",
         icon: BookOpen,
-        url: "/ai/knowledge-base",
+        url: "/ai/ai-assistant",
       },
       {
         id: "prompts",
         label: "Prompt Settings",
         icon: FileText,
         url: "/ai/prompts",
-      },
-      {
-        id: "ai-usage",
-        label: "Usage Metrics",
-        icon: Activity,
-        url: "/ai/usage",
       },
     ],
   },
@@ -170,14 +147,14 @@ const navSections: NavSection[] = [
   },
   {
     title: "Analytics",
-    items: [
-      {
-        id: "analytics",
+    items: dashboardModules
+      .filter((module) => module.id === "analytics")
+      .map((module) => ({
+        id: module.id,
         label: "Analytics Center",
-        icon: BarChart3,
-        url: "/analytics",
-      },
-    ],
+        icon: module.icon,
+        url: module.href,
+      })),
   },
   {
     title: "Team",
@@ -235,7 +212,7 @@ const navSections: NavSection[] = [
 // ── Sidebar component ──────────────────────────────────────────────────
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
-  const { workspaceType, organizationName } = useWorkspace();
+  const { workspaceType, organizationName, accessContext } = useWorkspace();
 
   const filteredSections = navSections
     .filter((section) => !section.hideFor?.includes(workspaceType))
@@ -244,7 +221,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       items: section.items.filter(
         (item) => !item.hideFor?.includes(workspaceType)
       ),
-    }));
+    }))
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => {
+        const dashboardModule = dashboardModules.find(
+          (entry) => entry.href === item.url,
+        );
+
+        return !dashboardModule || canAccessModule(dashboardModule, accessContext);
+      }),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <Sidebar className="border-r-0 bg-sidebar" {...props}>

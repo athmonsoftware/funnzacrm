@@ -304,17 +304,17 @@ export default function CustomersPage() {
 
   console.log("Filtered:", filteredCustomers);
   return (
-    <main className="min-h-screen bg-[#f6f8fb] px-4 py-5 text-[#14213d] sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#16a34a]">
+            <p className="text-sm font-semibold text-funza-primary">
               Customer management
             </p>
             <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">
               Customer directory
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Search, segment, assign, import, and export customer records
               across SMS, WhatsApp, and AI-assisted support.
             </p>
@@ -341,51 +341,51 @@ export default function CustomersPage() {
 
         <section className="grid gap-4 lg:grid-cols-3">
           <Card className="p-4">
-            <p className="text-sm text-[#64748b]">Total customers</p>
+            <p className="text-sm text-muted-foreground">Total customers</p>
             <p className="mt-2 text-2xl font-semibold">
               {customers.length.toLocaleString()}
             </p>
-            <p className="mt-1 text-xs text-[#64748b]">
+            <p className="mt-1 text-xs text-muted-foreground">
               12 demo records ready for workflows
             </p>
           </Card>
           <Card className="p-4">
-            <p className="text-sm text-[#64748b]">Active customers</p>
+            <p className="text-sm text-muted-foreground">Active customers</p>
             <p className="mt-2 text-2xl font-semibold">
               {
                 customers.filter((customer) => customer.status === "Active")
                   .length
               }
             </p>
-            <p className="mt-1 text-xs text-[#64748b]">
+            <p className="mt-1 text-xs text-muted-foreground">
               Available for campaigns and assignment
             </p>
           </Card>
           <Card className="p-4">
-            <p className="text-sm text-[#64748b]">Top segment</p>
+            <p className="text-sm text-muted-foreground">Top segment</p>
             <p className="mt-2 text-2xl font-semibold">
               {customerSegments[0].name}
             </p>
-            <p className="mt-1 text-xs text-[#64748b]">
+            <p className="mt-1 text-xs text-muted-foreground">
               {customerSegments[0].count} customers in segment
             </p>
           </Card>
         </section>
 
         <Card>
-          <div className="flex flex-col gap-3 border-b border-[#edf1f5] p-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-col gap-3 border-b border-border p-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] xl:min-w-[620px]">
-              <label className="flex h-11 min-w-0 items-center gap-2 rounded-md border border-[#d8e0e8] bg-white px-3">
-                <Search size={17} className="text-[#64748b]" />
+              <label className="flex h-11 min-w-0 items-center gap-2 rounded-md border border-border bg-card px-3">
+                <Search size={17} className="text-muted-foreground" />
                 <input
-                  className="min-w-0 flex-1 text-sm outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-sm outline-none"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search name, phone, email, tag, or agent"
                 />
               </label>
-              <label className="flex h-11 items-center gap-2 rounded-md border border-[#d8e0e8] bg-white px-3 text-sm">
-                <Filter size={16} className="text-[#64748b]" />
+              <label className="flex h-11 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm">
+                <Filter size={16} className="text-muted-foreground" />
                 <select
                   className="bg-transparent text-sm outline-none"
                   value={status}
@@ -398,7 +398,7 @@ export default function CustomersPage() {
               </label>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-[#64748b]">
+              <span className="text-sm text-muted-foreground">
                 {selectedIds.length} selected
               </span>
               <Button
@@ -417,7 +417,7 @@ export default function CustomersPage() {
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1040px] text-left text-sm">
-              <thead className="bg-[#f8fafc] text-xs uppercase tracking-[0.12em] text-[#64748b]">
+              <thead className="bg-muted text-xs uppercase tracking-[0.12em] text-muted-foreground">
                 <tr>
                   <th className="w-12 px-5 py-3">
                     <input
@@ -437,9 +437,9 @@ export default function CustomersPage() {
                   <th className="px-5 py-3 font-semibold">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#edf1f5]">
+              <tbody className="divide-y divide-border">
                 {filteredCustomers.map((customer) => (
-                  <tr key={customer.id} className="bg-white hover:bg-[#fbfdff]">
+                  <tr key={customer.id} className="bg-card hover:bg-muted/50">
                     <td className="px-5 py-4">
                       <input
                         aria-label={`Select ${customer.name}`}
@@ -450,7 +450,7 @@ export default function CustomersPage() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#eef7f1] text-xs font-bold text-[#047857]">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-funza-primary-light text-xs font-bold text-funza-primary">
                           {customer.name
                             ?.split(" ")
                             .map((part) => part[0])
@@ -459,7 +459,7 @@ export default function CustomersPage() {
                         </span>
                         <div>
                           <p className="font-semibold">{customer.name}</p>
-                          <p className="mt-0.5 text-xs text-[#64748b]">
+                          <p className="mt-0.5 text-xs text-muted-foreground">
                             {customer.source}
                           </p>
                         </div>
@@ -468,7 +468,7 @@ export default function CustomersPage() {
                     <td className="px-5 py-4 font-mono text-xs">
                       {customer.phone}
                     </td>
-                    <td className="px-5 py-4 text-[#475569]">
+                    <td className="px-5 py-4 text-muted-foreground">
                       {customer.email}
                     </td>
                     <td className="px-5 py-4">
@@ -488,7 +488,7 @@ export default function CustomersPage() {
                         {customer.status}
                       </Badge>
                     </td>
-                    <td className="px-5 py-4 text-[#64748b]">
+                    <td className="px-5 py-4 text-muted-foreground">
                       {customer.last_active
                         ? new Date(customer.last_active).toLocaleDateString()
                         : "-"}
@@ -547,14 +547,14 @@ export default function CustomersPage() {
             </table>
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-[#edf1f5] px-5 py-4 text-sm text-[#64748b] sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-t border-border px-5 py-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <p>
               Showing{" "}
-              <span className="font-semibold text-[#14213d]">
+              <span className="font-semibold text-foreground">
                 {filteredCustomers.length}
               </span>{" "}
               of{" "}
-              <span className="font-semibold text-[#14213d]">
+              <span className="font-semibold text-foreground">
                 {customers.length}
               </span>{" "}
               customers
@@ -578,28 +578,28 @@ export default function CustomersPage() {
 
             <div className="space-y-3">
               <input
-                className="w-full rounded border p-2"
+                className="w-full rounded border bg-background p-2 text-foreground"
                 placeholder="Full Name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
 
               <input
-                className="w-full rounded border p-2"
+                className="w-full rounded border bg-background p-2 text-foreground"
                 placeholder="Phone Number"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
               />
 
               <input
-                className="w-full rounded border p-2"
+                className="w-full rounded border bg-background p-2 text-foreground"
                 placeholder="Email Address"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
 
               <input
-                className="w-full rounded border p-2"
+                className="w-full rounded border bg-background p-2 text-foreground"
                 placeholder="Assigned Agent"
                 value={form.assignedAgent}
                 onChange={(e) =>
@@ -608,21 +608,21 @@ export default function CustomersPage() {
               />
 
               <input
-                className="w-full rounded border p-2"
+                className="w-full rounded border bg-background p-2 text-foreground"
                 placeholder="Tags (VIP, Retail, Enterprise)"
                 value={form.tags}
                 onChange={(e) => setForm({ ...form, tags: e.target.value })}
               />
 
               <input
-                className="w-full rounded border p-2"
+                className="w-full rounded border bg-background p-2 text-foreground"
                 placeholder="Avatar URL (optional)"
                 value={form.avatar}
                 onChange={(e) => setForm({ ...form, avatar: e.target.value })}
               />
 
               <select
-                className="w-full rounded border p-2"
+                className="w-full rounded border bg-background p-2 text-foreground"
                 value={form.source}
                 onChange={(e) => setForm({ ...form, source: e.target.value })}
               >
@@ -634,7 +634,7 @@ export default function CustomersPage() {
               </select>
 
               <select
-                className="w-full rounded border p-2"
+                className="w-full rounded border bg-background p-2 text-foreground"
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
               >
@@ -644,7 +644,7 @@ export default function CustomersPage() {
               </select>
 
               <select
-                className="w-full rounded border p-2"
+                className="w-full rounded border bg-background p-2 text-foreground"
                 value={form.stage}
                 onChange={(e) => setForm({ ...form, stage: e.target.value })}
               >

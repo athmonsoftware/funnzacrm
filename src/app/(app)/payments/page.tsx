@@ -15,13 +15,13 @@ export default function PaymentsPage() {
   const failed = transactions.filter((transaction) => transaction.status === "failed")
 
   return (
-    <main className="min-h-screen bg-[#f6f8fb] px-4 py-5 text-[#14213d] sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#16a34a]">Payment center</p>
+            <p className="text-sm font-semibold text-funza-primary">Payment center</p>
             <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">Transactions</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Monitor successful, pending, and failed payments across mobile money, bank transfer, and subscriptions.
             </p>
           </div>
@@ -39,7 +39,7 @@ export default function PaymentsPage() {
           <SectionHeader title="Transaction management" />
           <div className="overflow-x-auto">
             <table className="w-full min-w-[960px] text-left text-sm">
-              <thead className="bg-[#f8fafc] text-xs uppercase tracking-[0.12em] text-[#64748b]">
+              <thead className="bg-muted text-xs uppercase tracking-[0.12em] text-muted-foreground">
                 <tr>
                   <th className="px-5 py-3">Reference</th>
                   <th className="px-5 py-3">Customer</th>
@@ -50,14 +50,14 @@ export default function PaymentsPage() {
                   <th className="px-5 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#edf1f5]">
+              <tbody className="divide-y divide-border">
                 {transactions.map((transaction) => (
-                  <tr key={transaction.id} className="bg-white">
+                  <tr key={transaction.id} className="bg-card">
                     <td className="px-5 py-4 font-mono text-xs">{transaction.id}</td>
                     <td className="px-5 py-4 font-semibold">{transaction.customer}</td>
-                    <td className="px-5 py-4 text-[#475569]">{transaction.description}</td>
+                    <td className="px-5 py-4 text-muted-foreground">{transaction.description}</td>
                     <td className="px-5 py-4">{transaction.channel}</td>
-                    <td className="px-5 py-4 text-[#64748b]">{transaction.date}</td>
+                    <td className="px-5 py-4 text-muted-foreground">{transaction.date}</td>
                     <td className="px-5 py-4 font-semibold">{transaction.amount}</td>
                     <td className="px-5 py-4">
                       <Badge tone={statusTone[transaction.status]}>{transaction.status}</Badge>
@@ -84,14 +84,14 @@ function Summary({
   value: string
   tone?: "green" | "amber" | "red"
 }) {
-  const color = tone === "green" ? "text-[#16a34a] bg-[#eef7f1]" : tone === "amber" ? "text-[#c2410c] bg-[#fff7ed]" : "text-[#b91c1c] bg-[#fee2e2]"
+  const color = tone === "green" ? "text-funza-primary bg-funza-primary-light" : tone === "amber" ? "text-orange-700 bg-orange-50 dark:text-orange-400 dark:bg-orange-950/30" : "text-red-700 bg-red-50 dark:text-red-400 dark:bg-red-950/30"
 
   return (
     <Card className="p-4">
       <span className={`flex h-10 w-10 items-center justify-center rounded-md ${color}`}>
         <Icon size={18} />
       </span>
-      <p className="mt-3 text-sm text-[#64748b]">{label}</p>
+      <p className="mt-3 text-sm text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
     </Card>
   )

@@ -102,17 +102,17 @@ export default function DashboardPage() {
     }
   };
   return (
-    <main className="min-h-screen bg-[#f6f8fb] px-4 py-5 text-[#14213d] sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#16a34a]">
+            <p className="text-sm font-semibold text-funza-primary">
               Workspace overview
             </p>
             <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">
               AI operating system for business communication
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Monitor customers, conversations, payments, and AI automation from
               one fast workspace.
             </p>
@@ -137,14 +137,14 @@ export default function DashboardPage() {
             return (
               <Card key={metric.id} className="p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#eef7f1] text-[#16a34a]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-funza-primary-light text-funza-primary">
                     <Icon size={18} />
                   </div>
                   <Badge tone={isDown ? "amber" : "green"}>
                     {metric.change}
                   </Badge>
                 </div>
-                <p className="mt-4 text-sm text-[#64748b]">{metric.label}</p>
+                <p className="mt-4 text-sm text-muted-foreground">{metric.label}</p>
                 <p className="mt-2 text-2xl font-semibold tracking-normal">
                   {metric.value}
                 </p>
@@ -178,11 +178,11 @@ export default function DashboardPage() {
                 tone="blue"
               />
               <StackedMessageChart />
-              <div className="rounded-md border border-[#edf1f5] p-4">
+              <div className="rounded-md border border-border p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h2 className="font-semibold">AI performance</h2>
-                    <p className="mt-1 text-sm text-[#64748b]">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       Resolution mix across live conversations.
                     </p>
                   </div>
@@ -192,17 +192,17 @@ export default function DashboardPage() {
                   <MetricProgress
                     label="Resolved"
                     value={aiPerformanceData.resolved}
-                    tone="bg-[#16a34a]"
+                    tone="bg-funza-primary"
                   />
                   <MetricProgress
                     label="Escalated"
                     value={aiPerformanceData.escalated}
-                    tone="bg-[#4f46e5]"
+                    tone="bg-funza-accent"
                   />
                   <MetricProgress
                     label="Pending"
                     value={aiPerformanceData.pending}
-                    tone="bg-[#f59e0b]"
+                    tone="bg-funza-warning"
                   />
                 </div>
               </div>
@@ -221,17 +221,17 @@ export default function DashboardPage() {
                   return (
                     <button
                       key={action.id}
-                      className="flex items-center gap-3 rounded-md border border-[#edf1f5] p-3 text-left transition hover:border-[#16a34a]/30 hover:bg-[#f8fafc]"
+                      className="flex items-center gap-3 rounded-md border border-border p-3 text-left transition hover:border-funza-primary/30 hover:bg-muted"
                       type="button"
                     >
-                      <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#f1f5f9] text-[#14213d]">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-md bg-muted text-foreground">
                         <Icon size={17} />
                       </span>
                       <span className="min-w-0">
                         <span className="block text-sm font-semibold">
                           {action.label}
                         </span>
-                        <span className="block truncate text-xs text-[#64748b]">
+                        <span className="block truncate text-xs text-muted-foreground">
                           {action.description}
                         </span>
                       </span>
@@ -248,7 +248,7 @@ export default function DashboardPage() {
               />
               <div className="space-y-4 p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[#64748b]">Current plan</span>
+                  <span className="text-sm text-muted-foreground">Current plan</span>
                   <span className="font-semibold">
                     {subscriptionStatus.plan}
                   </span>
@@ -269,9 +269,9 @@ export default function DashboardPage() {
                   limit={subscriptionStatus.aiTokensLimit}
                   compact
                 />
-                <p className="rounded-md bg-[#f8fafc] px-3 py-2 text-xs text-[#64748b]">
+                <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
                   Next billing:{" "}
-                  <span className="font-semibold text-[#14213d]">
+                  <span className="font-semibold text-foreground">
                     {subscriptionStatus.nextBilling}
                   </span>
                 </p>
@@ -286,7 +286,7 @@ export default function DashboardPage() {
               title="Recent conversations"
               action={<Button tone="secondary">Open inbox</Button>}
             />
-            <div className="divide-y divide-[#edf1f5]">
+            <div className="divide-y divide-border">
               {conversations.slice(0, 5).map((conversation) => (
                 <div
                   key={conversation.id}
@@ -296,10 +296,10 @@ export default function DashboardPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-semibold">{conversation.customer}</p>
                       {conversation.unread ? (
-                        <span className="h-2 w-2 rounded-full bg-[#16a34a]" />
+                        <span className="h-2 w-2 rounded-full bg-funza-primary" />
                       ) : null}
                     </div>
-                    <p className="mt-1 line-clamp-1 text-sm text-[#64748b]">
+                    <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">
                       {conversation.preview}
                     </p>
                   </div>
@@ -321,18 +321,18 @@ export default function DashboardPage() {
               title="Live activity"
               description="Workspace events from customers, AI, payments, and teams."
             />
-            <div className="divide-y divide-[#edf1f5]">
+            <div className="divide-y divide-border">
               {recentActivity.slice(0, 6).map((activity) => {
                 const Icon = activityIcons[activity.type] ?? CheckCircle2;
 
                 return (
                   <div key={activity.id} className="flex gap-3 px-5 py-4">
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#f1f5f9] text-[#14213d]">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-foreground">
                       <Icon size={16} />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{activity.message}</p>
-                      <p className="mt-1 text-xs text-[#64748b]">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         {activity.time}
                       </p>
                     </div>
@@ -341,13 +341,13 @@ export default function DashboardPage() {
               })}
               {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                  <div className="w-full max-w-lg rounded-md bg-white p-5 shadow-xl">
+                  <div className="w-full max-w-lg rounded-md bg-card p-5 shadow-xl">
                     <div className="mb-4 flex items-center justify-between">
                       <h2 className="text-lg font-semibold">Create Campaign</h2>
 
                       <button
                         onClick={() => setIsModalOpen(false)}
-                        className="text-sm text-gray-500"
+                        className="text-sm text-muted-foreground"
                       >
                         ✕
                       </button>
@@ -421,10 +421,10 @@ function MiniBarChart({
   tone: "green" | "blue";
 }) {
   const max = Math.max(...data.map((item) => item.value));
-  const color = tone === "green" ? "bg-[#16a34a]" : "bg-[#4f46e5]";
+  const color = tone === "green" ? "bg-funza-primary" : "bg-funza-accent";
 
   return (
-    <div className="rounded-md border border-[#edf1f5] p-4">
+    <div className="rounded-md border border-border p-4">
       <h2 className="font-semibold">{title}</h2>
       <div className="mt-5 flex h-44 items-end gap-2">
         {data.map((item) => (
@@ -432,13 +432,13 @@ function MiniBarChart({
             key={item.label}
             className="flex flex-1 flex-col items-center gap-2"
           >
-            <div className="flex h-36 w-full items-end rounded-md bg-[#f1f5f9]">
+            <div className="flex h-36 w-full items-end rounded-md bg-muted">
               <div
                 className={`w-full rounded-md ${color}`}
                 style={{ height: `${(item.value / max) * 100}%` }}
               />
             </div>
-            <span className="text-xs text-[#64748b]">{item.label}</span>
+            <span className="text-xs text-muted-foreground">{item.label}</span>
           </div>
         ))}
       </div>
@@ -452,7 +452,7 @@ function StackedMessageChart() {
   );
 
   return (
-    <div className="rounded-md border border-[#edf1f5] p-4">
+    <div className="rounded-md border border-border p-4">
       <h2 className="font-semibold">Message volume</h2>
       <div className="mt-5 flex h-44 items-end gap-2">
         {messageVolumeData.map((item) => {
@@ -463,21 +463,21 @@ function StackedMessageChart() {
               key={item.month}
               className="flex flex-1 flex-col items-center gap-2"
             >
-              <div className="flex h-36 w-full flex-col justify-end overflow-hidden rounded-md bg-[#f1f5f9]">
+              <div className="flex h-36 w-full flex-col justify-end overflow-hidden rounded-md bg-muted">
                 <div
-                  className="bg-[#4f46e5]"
+                  className="bg-funza-accent"
                   style={{ height: `${(item.ai / max) * 100}%` }}
                 />
                 <div
-                  className="bg-[#16a34a]"
+                  className="bg-funza-primary"
                   style={{ height: `${(item.whatsapp / max) * 100}%` }}
                 />
                 <div
-                  className="bg-[#0f766e]"
+                  className="bg-teal-600 dark:bg-teal-500"
                   style={{ height: `${(item.sms / max) * 100}%` }}
                 />
               </div>
-              <span className="text-xs text-[#64748b]">{item.month}</span>
+              <span className="text-xs text-muted-foreground">{item.month}</span>
               <span className="sr-only">{total} messages</span>
             </div>
           );
@@ -499,10 +499,10 @@ function MetricProgress({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between text-sm">
-        <span className="text-[#64748b]">{label}</span>
+        <span className="text-muted-foreground">{label}</span>
         <span className="font-semibold">{value}%</span>
       </div>
-      <div className="h-2 rounded-full bg-[#e2e8f0]">
+      <div className="h-2 rounded-full bg-border">
         <div
           className={`h-2 rounded-full ${tone}`}
           style={{ width: `${value}%` }}
@@ -532,7 +532,7 @@ function UsageBar({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between text-sm">
-        <span className="text-[#64748b]">{label}</span>
+        <span className="text-muted-foreground">{label}</span>
         <span className="font-semibold">
           {formatter.format(value)} / {formatter.format(limit)}
         </span>
