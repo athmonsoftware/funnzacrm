@@ -96,4 +96,3 @@ export type AnalyticsSeriesPoint = {
   secondaryValue?: number;
   group?: string;
 };
-
