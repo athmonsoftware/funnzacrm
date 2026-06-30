@@ -31,17 +31,20 @@ export default function PaymentsPage() {
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/payments`,
-          { cache: "no-store" },
+          {
+            credentials: "include",
+          }
         );
 
-        if (res.ok) {
-          const json = await res.json();
-          setTransactions(json.transactions || json.data || []);
-        } else {
-          setError(true);
+        if (!res.ok) {
+          throw new Error("Failed to fetch payments");
         }
+
+        const json = await res.json();
+
+        setTransactions(json.transactions || json.data || []);
       } catch (err) {
-        console.error("Payments API failed", err);
+        console.error("Payments API failed:", err);
         setError(true);
       } finally {
         setLoading(false);
@@ -52,13 +55,13 @@ export default function PaymentsPage() {
   }, []);
 
   const successful = transactions.filter(
-    (transaction) => transaction.status === "successful",
+    (transaction) => transaction.status === "successful"
   );
   const pending = transactions.filter(
-    (transaction) => transaction.status === "pending",
+    (transaction) => transaction.status === "pending"
   );
   const failed = transactions.filter(
-    (transaction) => transaction.status === "failed",
+    (transaction) => transaction.status === "failed"
   );
 
   if (loading) {
@@ -250,8 +253,8 @@ function Summary({
     tone === "green"
       ? "text-funza-primary bg-funza-primary-light"
       : tone === "amber"
-        ? "text-orange-700 bg-orange-50 dark:text-orange-400 dark:bg-orange-950/30"
-        : "text-red-700 bg-red-50 dark:text-red-400 dark:bg-red-950/30";
+      ? "text-orange-700 bg-orange-50 dark:text-orange-400 dark:bg-orange-950/30"
+      : "text-red-700 bg-red-50 dark:text-red-400 dark:bg-red-950/30";
 
   return (
     <Card className="p-4">

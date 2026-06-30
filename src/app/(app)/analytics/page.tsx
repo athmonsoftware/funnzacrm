@@ -22,31 +22,74 @@ import {
 } from "@/lib/mock-data";
 import { Badge, Card, ProgressBar, SectionHeader } from "@/components/ui";
 
-type AnalyticsData = {
-  analyticsAI?: typeof mockAnalyticsAI;
-  analyticsConversation?: typeof mockAnalyticsConversation;
-  analyticsCustomer?: typeof mockAnalyticsCustomer;
-  analyticsRevenue?: typeof mockAnalyticsRevenue;
-  customerGrowthData?: typeof mockCustomerGrowthData;
-  messageVolumeData?: typeof mockMessageVolumeData;
-  revenueData?: typeof mockRevenueData;
+type AnalyticsResponse = {
+  analyticsAI: {
+    automationRate: number;
+    responseRate: number;
+    aiSatisfaction: number;
+    escalationRate: number;
+    costSavings: number;
+    topIntents: { intent: string; pct: number }[];
+  };
+
+  analyticsConversation: {
+    totalMessages: number;
+    avgResponseTime: string;
+    avgResolutionTime: string;
+    satisfactionScore: number;
+    channelBreakdown: {
+      sms: number;
+      whatsapp: number;
+      ai: number;
+    };
+  };
+
+  analyticsCustomer: {
+    retention: number;
+    retentionChange: string;
+    churn: number;
+    churnChange: string;
+    newVsReturning: {
+      new: number;
+      returning: number;
+    };
+  };
+
+  analyticsRevenue: {
+    monthlyRevenue: string;
+    subscriptionGrowth: string;
+    totalRevenue: string;
+    revenueByPlan: {
+      plan: string;
+      customers: number;
+      revenue: number;
+    }[];
+  };
+
+  customerGrowthData: { month: string; customers: number }[];
+  messageVolumeData: {
+    month: string;
+    sms: number;
+    whatsapp: number;
+    ai: number;
+  }[];
+  revenueData: { month: string; revenue: number }[];
 };
 
 export default function AnalyticsPage() {
-  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [data, setData] = useState<AnalyticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-
+  const API = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
     async function loadAnalytics() {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/analytics`,
-          { cache: "no-store" },
-        );
+        const res = await fetch(`${API}/api/analytics`, {
+          credentials: "include",
+        });
 
         if (res.ok) {
-          const json = await res.json();
+          const json: AnalyticsResponse = await res.json();
           setData(json);
         } else {
           setError(true);
@@ -62,14 +105,6 @@ export default function AnalyticsPage() {
     loadAnalytics();
   }, []);
 
-  const analyticsAI = data?.analyticsAI;
-  const analyticsConversation = data?.analyticsConversation;
-  const analyticsCustomer = data?.analyticsCustomer;
-  const analyticsRevenue = data?.analyticsRevenue;
-  const customerGrowthData = data?.customerGrowthData;
-  const messageVolumeData = data?.messageVolumeData;
-  const revenueData = data?.revenueData;
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
@@ -78,17 +113,7 @@ export default function AnalyticsPage() {
     );
   }
 
-  if (
-    error ||
-    !data ||
-    !analyticsAI ||
-    !analyticsConversation ||
-    !analyticsCustomer ||
-    !analyticsRevenue ||
-    !customerGrowthData ||
-    !messageVolumeData ||
-    !revenueData
-  ) {
+  if (error || !data) {
     return (
       <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-5">
@@ -140,26 +165,26 @@ export default function AnalyticsPage() {
           <Metric
             icon={UsersRound}
             label="Retention"
-            value={`${analyticsCustomer.retention}%`}
-            change={analyticsCustomer.retentionChange}
+            value={`${data.analyticsCustomer.retention}%`}
+            change={data.analyticsCustomer.retentionChange}
           />
           <Metric
             icon={MessageCircle}
             label="Messages"
-            value={analyticsConversation.totalMessages.toLocaleString()}
-            change={analyticsConversation.avgResponseTime}
+            value={data.analyticsConversation.totalMessages.toLocaleString()}
+            change={data.analyticsConversation.avgResponseTime}
           />
           <Metric
             icon={Bot}
             label="Automation"
-            value={`${analyticsAI.automationRate}%`}
-            change={`${analyticsAI.escalationRate}% escalated`}
+            value={`${data.analyticsAI.automationRate}%`}
+            change={`${data.analyticsAI.escalationRate}% escalated`}
           />
           <Metric
             icon={Wallet}
             label="Monthly revenue"
-            value={analyticsRevenue.monthlyRevenue}
-            change={analyticsRevenue.subscriptionGrowth}
+            value={data.analyticsRevenue.monthlyRevenue}
+            change={data.analyticsRevenue.subscriptionGrowth}
           />
         </section>
 
@@ -169,7 +194,7 @@ export default function AnalyticsPage() {
             <div className="grid gap-5 p-5 lg:grid-cols-2">
               <MiniBarChart
                 title="Customer growth"
-                data={customerGrowthData.map((item) => ({
+                data={data.customerGrowthData.map((item) => ({
                   label: item.month,
                   value: item.customers,
                 }))}
@@ -177,7 +202,7 @@ export default function AnalyticsPage() {
               />
               <MiniBarChart
                 title="Revenue"
-                data={revenueData.map((item) => ({
+                data={data.revenueData.map((item) => ({
                   label: item.month,
                   value: item.revenue,
                 }))}
@@ -192,28 +217,30 @@ export default function AnalyticsPage() {
               <HealthRow
                 icon={TrendingUp}
                 label="Returning customers"
-                value={analyticsCustomer.newVsReturning.returning}
+                value={data.analyticsCustomer.newVsReturning.returning}
                 total={
-                  analyticsCustomer.newVsReturning.new +
-                  analyticsCustomer.newVsReturning.returning
+                  data.analyticsCustomer.newVsReturning.new +
+                  data.analyticsCustomer.newVsReturning.returning
                 }
               />
               <HealthRow
                 icon={TrendingDown}
                 label="New customers"
-                value={analyticsCustomer.newVsReturning.new}
+                value={data.analyticsCustomer.newVsReturning.new}
                 total={
-                  analyticsCustomer.newVsReturning.new +
-                  analyticsCustomer.newVsReturning.returning
+                  data.analyticsCustomer.newVsReturning.new +
+                  data.analyticsCustomer.newVsReturning.returning
                 }
               />
               <div className="rounded-md border border-border p-4">
                 <p className="text-sm text-muted-foreground">Churn</p>
                 <div className="mt-2 flex items-end justify-between gap-3">
                   <p className="text-2xl font-semibold">
-                    {analyticsCustomer.churn}%
+                    {data.analyticsCustomer.churn}%
                   </p>
-                  <Badge tone="green">{analyticsCustomer.churnChange}</Badge>
+                  <Badge tone="green">
+                    {data.analyticsCustomer.churnChange}
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -226,17 +253,17 @@ export default function AnalyticsPage() {
             <div className="space-y-4 p-5">
               <Info
                 label="Avg response time"
-                value={analyticsConversation.avgResponseTime}
+                value={data.analyticsConversation.avgResponseTime}
               />
               <Info
                 label="Avg resolution time"
-                value={analyticsConversation.avgResolutionTime}
+                value={data.analyticsConversation.avgResolutionTime}
               />
               <Info
                 label="Satisfaction"
-                value={`${analyticsConversation.satisfactionScore}/5`}
+                value={`${data.analyticsConversation.satisfactionScore}/5`}
               />
-              {Object.entries(analyticsConversation.channelBreakdown).map(
+              {Object.entries(data.analyticsConversation.channelBreakdown).map(
                 ([channel, value]) => (
                   <div key={channel}>
                     <div className="mb-2 flex justify-between text-sm">
@@ -247,7 +274,7 @@ export default function AnalyticsPage() {
                     </div>
                     <ProgressBar value={value} />
                   </div>
-                ),
+                )
               )}
             </div>
           </Card>
@@ -257,10 +284,13 @@ export default function AnalyticsPage() {
             <div className="space-y-4 p-5">
               <Info
                 label="AI satisfaction"
-                value={`${analyticsAI.aiSatisfaction}/5`}
+                value={`${data.analyticsAI.aiSatisfaction}/5`}
               />
-              <Info label="Cost savings" value={analyticsAI.costSavings} />
-              {analyticsAI.topIntents.slice(0, 4).map((intent) => (
+              <Info
+                label="Cost savings"
+                value={`GHS ${data.analyticsAI.costSavings.toLocaleString()}`}
+              />
+              {data.analyticsAI.topIntents.slice(0, 4).map((intent) => (
                 <div key={intent.intent}>
                   <div className="mb-2 flex justify-between text-sm">
                     <span className="text-muted-foreground">
@@ -278,11 +308,11 @@ export default function AnalyticsPage() {
             <SectionHeader
               title="Revenue analytics"
               action={
-                <Badge tone="blue">{analyticsRevenue.totalRevenue}</Badge>
+                <Badge tone="blue">{data.analyticsRevenue.totalRevenue}</Badge>
               }
             />
             <div className="divide-y divide-border">
-              {analyticsRevenue.revenueByPlan.map((plan) => (
+              {data.analyticsRevenue.revenueByPlan.map((plan) => (
                 <div key={plan.plan} className="px-5 py-4">
                   <div className="mb-2 flex items-center justify-between gap-3 text-sm">
                     <span className="font-semibold">{plan.plan}</span>
@@ -305,12 +335,12 @@ export default function AnalyticsPage() {
         <Card>
           <SectionHeader title="Message volume" />
           <div className="flex h-64 items-end gap-3 p-5">
-            {messageVolumeData.map((item) => {
+            {data.messageVolumeData.map((item) => {
               const total = item.sms + item.whatsapp + item.ai;
               const max = Math.max(
-                ...messageVolumeData.map(
-                  (volume) => volume.sms + volume.whatsapp + volume.ai,
-                ),
+                ...data.messageVolumeData.map(
+                  (volume) => volume.sms + volume.whatsapp + volume.ai
+                )
               );
 
               return (
