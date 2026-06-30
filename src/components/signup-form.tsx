@@ -85,7 +85,7 @@ export function SignupForm({
   const businessDocumentLabel = getBusinessDocumentLabel(accountType);
   const selectedAccountType = useMemo(
     () => accountTypes.find((type) => type.value === accountType),
-    [accountType],
+    [accountType]
   );
 
   const { data: session } = useSession();
@@ -264,17 +264,19 @@ export function SignupForm({
 
       const allApproved = requiredDocs.every(
         (doc) =>
-          documentApproval[doc as keyof typeof documentApproval] === "approved",
+          documentApproval[doc as keyof typeof documentApproval] === "approved"
       );
 
       if (!allApproved) {
         const pendingDocs = requiredDocs.filter(
           (doc) =>
             documentApproval[doc as keyof typeof documentApproval] !==
-            "approved",
+            "approved"
         );
         toast.error(
-          `Please wait for all documents to be approved. Pending: ${pendingDocs.join(", ")}`,
+          `Please wait for all documents to be approved. Pending: ${pendingDocs.join(
+            ", "
+          )}`
         );
         return;
       }
@@ -382,7 +384,7 @@ export function SignupForm({
         return;
       }
 
-      const status = result?.verification?.status;
+      const status = result?.data?.status;
 
       if (status === "approved") {
         setDocumentApproval((prev) => ({
@@ -477,7 +479,7 @@ export function SignupForm({
 
     const allApproved = requiredDocs.every(
       (doc) =>
-        documentApproval[doc as keyof typeof documentApproval] === "approved",
+        documentApproval[doc as keyof typeof documentApproval] === "approved"
     );
 
     if (!allApproved) {
@@ -502,7 +504,7 @@ export function SignupForm({
             userId: session?.user?.id,
             ...data,
           }),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -516,7 +518,7 @@ export function SignupForm({
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to complete registration",
+          : "Failed to complete registration"
       );
     } finally {
       setIsCreatingAccount(false);
@@ -548,8 +550,8 @@ export function SignupForm({
                   isActive
                     ? "border-foreground bg-foreground text-background"
                     : isDone
-                      ? "border-[#16a34a] bg-[#e8f6ef] text-[#047857]"
-                      : "border-border bg-muted/40 text-muted-foreground",
+                    ? "border-[#16a34a] bg-[#e8f6ef] text-[#047857]"
+                    : "border-border bg-muted/40 text-muted-foreground"
                 )}
               >
                 <StepIcon className="size-4" />

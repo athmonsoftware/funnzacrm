@@ -52,6 +52,10 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [customerTags, setCustomerTags] = useState<
+    { id: string; name: string; count: number }[]
+  >([]);
+
   const filteredCustomers = useMemo(() => {
     const value = query.trim().toLowerCase();
 
@@ -159,6 +163,7 @@ export default function CustomersPage() {
       }
 
       setCustomers(data.customers || []);
+      setCustomerTags(data.customerTags || []);
     } catch (err) {
       console.error("Failed to load customers:", err);
     } finally {
@@ -302,7 +307,25 @@ export default function CustomersPage() {
     console.log("Customers:", customers);
   }, [customers]);
 
-  console.log("Filtered:", filteredCustomers);
+  const topSegment = useMemo(() => {
+    const map = new Map<string, number>();
+
+    for (const c of customers) {
+      const key = c.stage || "Unknown";
+      map.set(key, (map.get(key) || 0) + 1);
+    }
+
+    let best = { name: "N/A", count: 0 };
+
+    for (const [name, count] of map.entries()) {
+      if (count > best.count) {
+        best = { name, count };
+      }
+    }
+
+    return best;
+  }, [customers]);
+
   return (
     <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
@@ -345,9 +368,6 @@ export default function CustomersPage() {
             <p className="mt-2 text-2xl font-semibold">
               {customers.length.toLocaleString()}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              12 demo records ready for workflows
-            </p>
           </Card>
           <Card className="p-4">
             <p className="text-sm text-muted-foreground">Active customers</p>
@@ -363,11 +383,9 @@ export default function CustomersPage() {
           </Card>
           <Card className="p-4">
             <p className="text-sm text-muted-foreground">Top segment</p>
-            <p className="mt-2 text-2xl font-semibold">
-              {customerSegments[0].name}
-            </p>
+            <p className="mt-2 text-2xl font-semibold">{topSegment.name}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {customerSegments[0].count} customers in segment
+              {topSegment.count} customers in segment
             </p>
           </Card>
         </section>

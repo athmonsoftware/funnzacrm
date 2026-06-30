@@ -79,25 +79,23 @@ export default function InboxPage() {
     fetchConversations();
   }, []);
   useEffect(() => {
-    if (!selectedConversation && conversations.length > 0) {
-      setSelectedConversation(conversations[0]);
+    if (conversations.length > 0) {
+      setSelectedConversation((prev: any) => {
+        if (prev) return prev;
+        return conversations[0];
+      });
     }
-  }, [conversations, selectedConversation]);
-  if (loading) {
-    return (
-      <div className="p-10 text-sm text-muted-foreground">Loading conversations...</div>
-    );
-  }
+  }, [conversations]);
 
-  if (!selectedConversation) return null;
+  const hasConversation = selectedConversation && selectedConversation.messages;
 
   const customer = {
-    name: selectedConversation.customer,
-    phone: selectedConversation.customer_number,
-    email: selectedConversation.email,
-    status: selectedConversation.status,
-    last_active: selectedConversation.last_active,
-    tags: selectedConversation.tags || [],
+    name: selectedConversation?.customer ?? "Unknown",
+    phone: selectedConversation?.phone ?? "Unknown",
+    email: selectedConversation?.email ?? "No email",
+    status: selectedConversation?.status ?? "Unknown",
+    last_active: selectedConversation?.last_active ?? "",
+    tags: selectedConversation?.tags ?? [],
   };
 
   const handleSendSms = async () => {
@@ -146,6 +144,34 @@ export default function InboxPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Loading conversations...
+      </div>
+    );
+  }
+
+  if (!conversations.length) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
+        <MessageCircle className="text-muted-foreground" size={32} />
+        <h2 className="text-lg font-semibold">No conversations yet</h2>
+        <p className="text-sm text-muted-foreground">
+          When customers message you, they’ll show up here.
+        </p>
+      </div>
+    );
+  }
+
+  if (!selectedConversation) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Select a conversation to begin
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
@@ -192,55 +218,66 @@ export default function InboxPage() {
               </p>
             </div>
             <div className="max-h-[720px] overflow-y-auto">
-              {filteredConversations.map((conversation) => {
-                const selected = selectedConversation.id === conversation.id;
+              {filteredConversations.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-6 text-center text-sm text-muted-foreground">
+                  <MessageCircle className="mb-2" size={20} />
+                  No conversations found
+                </div>
+              ) : (
+                filteredConversations.map((conversation) => {
+                  const selected = selectedConversation.id === conversation.id;
 
-                return (
-                  <button
-                    key={conversation.id}
-                    className={`block w-full border-b border-border px-4 py-4 text-left transition ${
-                      selected ? "bg-funza-primary-light" : "bg-card hover:bg-muted"
-                    }`}
-                    onClick={() => setSelectedConversation(conversation)}
-                    type="button"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate font-semibold">
-                            {conversation.customer}
+                  return (
+                    <button
+                      key={conversation.id}
+                      className={`block w-full border-b border-border px-4 py-4 text-left transition ${
+                        selected
+                          ? "bg-funza-primary-light"
+                          : "bg-card hover:bg-muted"
+                      }`}
+                      onClick={() => setSelectedConversation(conversation)}
+                      type="button"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate font-semibold">
+                              {conversation.customer}
+                            </p>
+                            {conversation.unread ? (
+                              <span className="h-2 w-2 shrink-0 rounded-full bg-funza-primary" />
+                            ) : null}
+                          </div>
+                          <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted-foreground">
+                            {conversation.preview}
                           </p>
-                          {conversation.unread ? (
-                            <span className="h-2 w-2 shrink-0 rounded-full bg-funza-primary" />
-                          ) : null}
                         </div>
-                        <p className="mt-1 line-clamp-2 text-sm leading-5 text-muted-foreground">
-                          {conversation.preview}
-                        </p>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {conversation.time}
+                        </span>
                       </div>
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {conversation.time}
-                      </span>
-                    </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <Badge
-                        tone={
-                          conversation.channel === "WhatsApp" ? "green" : "blue"
-                        }
-                      >
-                        {conversation.channel}
-                      </Badge>
-                      <Badge
-                        tone={
-                          conversation.priority === "high" ? "amber" : "gray"
-                        }
-                      >
-                        {conversation.aiClassification}
-                      </Badge>
-                    </div>
-                  </button>
-                );
-              })}
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <Badge
+                          tone={
+                            conversation.channel === "WhatsApp"
+                              ? "green"
+                              : "blue"
+                          }
+                        >
+                          {conversation.channel}
+                        </Badge>
+                        <Badge
+                          tone={
+                            conversation.priority === "high" ? "amber" : "gray"
+                          }
+                        >
+                          {conversation.aiClassification}
+                        </Badge>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </Card>
 
@@ -294,7 +331,7 @@ export default function InboxPage() {
                 </div>
               </div>
 
-              {selectedConversation.messages.map((message: any) => {
+              {selectedConversation?.messages?.map((message: any) => {
                 const isAgent = message.role === "agent";
                 const isAi = message.role === "ai";
 
@@ -384,7 +421,7 @@ export default function InboxPage() {
               <div className="space-y-4 p-5">
                 <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-md bg-funza-primary-light text-sm font-bold text-funza-primary">
-                    {selectedConversation.customer
+                    {(selectedConversation?.customer ?? "U")
                       .split(" ")
                       .map((part: any) => part[0])
                       .slice(0, 2)
@@ -486,7 +523,9 @@ function ToolRow({
       </span>
       <span className="min-w-0">
         <span className="block text-sm font-semibold">{label}</span>
-        <span className="block truncate text-xs text-muted-foreground">{value}</span>
+        <span className="block truncate text-xs text-muted-foreground">
+          {value}
+        </span>
       </span>
     </button>
   );

@@ -36,7 +36,7 @@ async function updateProfile(formData: FormData) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
-    },
+    }
   );
 
   if (!res.ok) {
@@ -64,7 +64,7 @@ export default async function ProfilePage() {
   // 🔥 FETCH FULL PROFILE HERE
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${user.id}`,
-    { cache: "no-store" },
+    { cache: "no-store" }
   );
 
   const profile = await res.json();
