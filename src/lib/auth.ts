@@ -30,5 +30,9 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 2, // 2 days
     updateAge: 60 * 60 * 6, // Refresh every 6 hours
-  }
+  },
+  trustedOrigins: [
+		"http://localhost:3001", // development
+		"https://funnzacrm.vercel.app", // production frontend
+	]
 });

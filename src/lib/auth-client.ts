@@ -3,6 +3,7 @@ import { emailOTPClient } from "better-auth/client/plugins"
 
 export const authClient = createAuthClient({
   fetchOptions: {
+      credentials: "include",
 			onSuccess: (ctx) => {
 				const authToken = ctx.response.headers.get("set-auth-token");
 				if (authToken) {
