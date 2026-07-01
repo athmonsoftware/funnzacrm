@@ -550,7 +550,7 @@ export function SignupForm({
                   isActive
                     ? "border-foreground bg-foreground text-background"
                     : isDone
-                    ? "border-[#16a34a] bg-[#e8f6ef] text-[#047857]"
+                    ? "border-funza-primary bg-funza-primary-light text-funza-primary"
                     : "border-border bg-muted/40 text-muted-foreground"
                 )}
               >

@@ -55,7 +55,7 @@ export function ReviewStep({
         ))}
       </div>
 
-      <div className="rounded-md border border-[#16a34a]/30 bg-[#e8f6ef] p-4 text-[#047857]">
+      <div className="rounded-md border border-funza-primary/30 bg-funza-primary-light p-4 text-funza-primary">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <CheckCircle className="size-4" />
           KYC ready for submission

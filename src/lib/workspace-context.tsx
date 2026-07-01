@@ -3,6 +3,7 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react"
 import { rolePermissions } from "@/config/access-control"
 import type { SubscriptionTier, UserAccessContext } from "@/types/platform"
+import { authClient } from "@/lib/auth-client"
 
 export type WorkspaceType = "personal" | "sme" | "enterprise"
 
@@ -24,10 +25,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       : workspaceType === "personal"
         ? "starter"
         : "business"
+  
+  const session = authClient.useSession()
 
   const accessContext = useMemo<UserAccessContext>(
     () => ({
-      userId: "usr_joel_demo",
+      userId: session.data?.user.id || "",
       role: "organization_owner",
       permissions: rolePermissions.organization_owner,
       tier,
@@ -55,11 +58,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         setWorkspaceType,
         organizationName:
           workspaceType === "enterprise"
-            ? "Funza Enterprise"
+            ? "Enterprise Workspace"
             : workspaceType === "personal"
               ? "Personal Workspace"
-              : "Funza AI Demo",
-        userName: "Joel Ekeng",
+              : "SME Workspace",
+        userName: session.data?.user.name || "User",
         accessContext,
       }}
     >

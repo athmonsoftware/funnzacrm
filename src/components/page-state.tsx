@@ -19,11 +19,11 @@ export function PageState({
 
   return (
     <Card className="flex min-h-64 flex-col items-center justify-center p-8 text-center">
-      <span className="flex h-12 w-12 items-center justify-center rounded-md bg-[#f1f5f9] text-[#14213d]">
+      <span className="flex h-12 w-12 items-center justify-center rounded-md bg-muted text-foreground">
         <Icon className={state === "loading" ? "animate-spin" : ""} size={22} />
       </span>
-      <h2 className="mt-4 text-lg font-semibold text-[#14213d]">{title}</h2>
-      <p className="mt-2 max-w-md text-sm leading-6 text-[#64748b]">
+      <h2 className="mt-4 text-lg font-semibold text-foreground">{title}</h2>
+      <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
         {description}
       </p>
       {action ? <div className="mt-5">{action}</div> : null}

@@ -12,9 +12,9 @@ export function Button({
   tone?: ButtonTone;
 }) {
   const tones: Record<ButtonTone, string> = {
-    primary: "bg-[#16a34a] text-white hover:bg-[#12823c]",
-    secondary: "border border-[#d8e0e8] bg-white text-[#14213d] hover:bg-[#f8fafc]",
-    ghost: "text-[#14213d] hover:bg-[#f1f5f9]",
+    primary: "bg-funza-primary text-white hover:bg-funza-primary/90",
+    secondary: "border border-border bg-card text-foreground hover:bg-muted",
+    ghost: "text-foreground hover:bg-muted",
   };
 
   return (
@@ -36,7 +36,7 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section className={`rounded-md border border-[#dfe5ec] bg-white ${className}`}>
+    <section className={`rounded-md border border-border bg-card text-card-foreground ${className}`}>
       {children}
     </section>
   );
@@ -52,10 +52,10 @@ export function SectionHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-[#edf1f5] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 className="text-lg font-semibold">{title}</h2>
-        {description ? <p className="mt-1 text-sm text-[#64748b]">{description}</p> : null}
+        {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
@@ -70,11 +70,11 @@ export function Badge({
   tone?: "green" | "blue" | "red" | "gray" | "amber";
 }) {
   const tones = {
-    green: "bg-[#e8f6ef] text-[#047857]",
-    blue: "bg-[#eaf2ff] text-[#1d4ed8]",
-    red: "bg-[#fee2e2] text-[#b91c1c]",
-    gray: "bg-[#f1f5f9] text-[#475569]",
-    amber: "bg-[#fff7ed] text-[#c2410c]",
+    green: "bg-funza-primary-light text-funza-primary",
+    blue: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    red: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+    gray: "bg-muted text-muted-foreground",
+    amber: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
   };
 
   return (
@@ -93,7 +93,7 @@ export function TextInput({
 }) {
   const input = (
     <input
-      className={`h-11 w-full rounded-md border border-[#d8e0e8] bg-white px-3 text-sm outline-none transition placeholder:text-[#94a3b8] focus:border-[#16a34a] ${className}`}
+      className={`h-11 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-funza-primary ${className}`}
       {...props}
     />
   );
@@ -110,8 +110,8 @@ export function TextInput({
 
 export function ProgressBar({ value }: { value: number }) {
   return (
-    <div className="h-2 rounded-full bg-[#e2e8f0]">
-      <div className="h-2 rounded-full bg-[#16a34a]" style={{ width: `${value}%` }} />
+    <div className="h-2 rounded-full bg-muted">
+      <div className="h-2 rounded-full bg-funza-primary" style={{ width: `${value}%` }} />
     </div>
   );
 }

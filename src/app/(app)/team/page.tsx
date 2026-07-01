@@ -245,12 +245,12 @@ export default function TeamMembersPage() {
 
       {isInviting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 space-y-4 text-black">
+          <div className="w-full max-w-md rounded-lg bg-card p-6 space-y-4 text-foreground">
             <h2 className="text-lg font-semibold">Add Team Member</h2>
 
             <input
               type="text"
-              className="w-full border p-2 rounded"
+              className="w-full rounded border border-border bg-background p-2 text-foreground"
               placeholder="Full name"
               value={inviteForm.name}
               onChange={(e) =>
@@ -263,7 +263,7 @@ export default function TeamMembersPage() {
 
             <input
               type="email"
-              className="w-full border p-2 rounded"
+              className="w-full rounded border border-border bg-background p-2 text-foreground"
               placeholder="Email address"
               value={inviteForm.email}
               onChange={(e) =>
@@ -275,7 +275,7 @@ export default function TeamMembersPage() {
             />
 
             <select
-              className="w-full border p-2 rounded"
+              className="w-full rounded border border-border bg-background p-2 text-foreground"
               value={inviteForm.role}
               onChange={(e) =>
                 setInviteForm((p) => ({

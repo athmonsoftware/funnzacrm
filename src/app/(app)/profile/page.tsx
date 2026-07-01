@@ -72,7 +72,7 @@ export default async function ProfilePage() {
   const initials = profile.full_name?.charAt(0).toUpperCase() ?? "U";
 
   return (
-    <section className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
+    <section className="p-5 grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
       {/* LEFT CARD */}
       <Card className="p-5">
         <div className="grid size-16 place-items-center rounded-md bg-funza-primary-light text-2xl font-bold text-funza-primary">

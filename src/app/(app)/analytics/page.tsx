@@ -11,15 +11,6 @@ import {
 } from "lucide-react";
 import type { ElementType } from "react";
 import { useEffect, useState } from "react";
-import {
-  analyticsAI as mockAnalyticsAI,
-  analyticsConversation as mockAnalyticsConversation,
-  analyticsCustomer as mockAnalyticsCustomer,
-  analyticsRevenue as mockAnalyticsRevenue,
-  customerGrowthData as mockCustomerGrowthData,
-  messageVolumeData as mockMessageVolumeData,
-  revenueData as mockRevenueData,
-} from "@/lib/mock-data";
 import { Badge, Card, ProgressBar, SectionHeader } from "@/components/ui";
 
 type AnalyticsResponse = {

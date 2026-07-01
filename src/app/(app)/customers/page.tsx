@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Filter, Search, Tags, Upload, UserPlus } from "lucide-react";
-import { customerSegments, customerTags } from "@/lib/mock-data";
 import { Badge, Button, Card } from "@/components/ui";
 import Papa from "papaparse";
 
@@ -552,7 +551,7 @@ export default function CustomersPage() {
                         </Button>
 
                         <Button
-                          className="bg-red-600 text-white hover:bg-red-700"
+                          className="bg-destructive text-white hover:bg-destructive/90"
                           onClick={() => deleteCustomer(customer.id)}
                         >
                           Delete

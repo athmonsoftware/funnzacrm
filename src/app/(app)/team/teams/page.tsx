@@ -241,11 +241,11 @@ export default function TeamsPage() {
       {/* --- GLOBAL MODAL LAYER --- */}
       {isCreating && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg space-y-3 text-black">
+          <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-lg space-y-3 text-foreground">
             <h2 className="text-lg font-semibold">Create Team</h2>
 
             <input
-              className="w-full border p-2 rounded"
+              className="w-full rounded border border-border bg-background p-2 text-foreground"
               placeholder="Team name"
               value={form.name}
               onChange={(e) =>
@@ -254,7 +254,7 @@ export default function TeamsPage() {
             />
 
             <input
-              className="w-full border p-2 rounded"
+              className="w-full rounded border border-border bg-background p-2 text-foreground"
               placeholder="Description"
               value={form.description}
               onChange={(e) =>

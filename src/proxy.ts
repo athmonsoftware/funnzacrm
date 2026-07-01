@@ -15,8 +15,12 @@ export default async function proxy(req: NextRequest) {
     }
 
     // Public pages
-    if (["/", "/login", "/signup", "/forgot-password", "/reset-password", "/login-otp", "/verify-email"].includes(pathname)) {
+    if (["/login", "/signup", "/forgot-password", "/reset-password", "/login-otp", "/verify-email"].includes(pathname)) {
         return NextResponse.next();
+    }
+
+    if (pathname === "/") {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     // Everything else requires auth

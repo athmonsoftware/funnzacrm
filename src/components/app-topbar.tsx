@@ -93,15 +93,6 @@ export function AppTopbar() {
             ))}
           </select>
 
-          <label className="hidden h-10 min-w-[220px] items-center gap-2 rounded-md border border-funza-border bg-card px-3 text-sm text-funza-text-muted md:flex">
-            <Search size={16} />
-            <input
-              aria-label="Global search"
-              className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-funza-text-muted"
-              placeholder="Search customers, threads, reports"
-            />
-          </label>
-
           <Button
             onClick={toggleTheme}
             aria-label="Toggle theme"

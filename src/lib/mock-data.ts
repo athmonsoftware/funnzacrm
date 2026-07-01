@@ -65,246 +65,6 @@ export const aiPerformanceData = {
   pending: 10,
 };
 
-// ── Customers ────────────────────────────────────────────────────────────
-export const customers = [
-  { id: "cust-001", name: "Ama Boateng", phone: "+233 24 000 1122", email: "ama@boateng.com", tags: ["VIP", "Retail"], status: "Active", lastActive: "2 mins ago", assignedAgent: "Kofi Asante", source: "WhatsApp", stage: "Qualified", avatar: null },
-  { id: "cust-002", name: "Kojo Mensah", phone: "+233 55 142 7788", email: "kojo.mensah@mail.com", tags: ["Support"], status: "Active", lastActive: "15 mins ago", assignedAgent: "Abena Osei", source: "SMS", stage: "Support", avatar: null },
-  { id: "cust-003", name: "Naa Logistics", phone: "+233 30 221 7810", email: "info@naalogistics.com", tags: ["Enterprise", "Logistics"], status: "Active", lastActive: "1 hour ago", assignedAgent: "Kwame Darko", source: "Web chat", stage: "Enterprise lead", avatar: null },
-  { id: "cust-004", name: "Bright Foods", phone: "+233 20 889 1201", email: "orders@brightfoods.gh", tags: ["F&B", "Bulk"], status: "Active", lastActive: "3 hours ago", assignedAgent: "Kofi Asante", source: "SMS", stage: "Invoice request", avatar: null },
-  { id: "cust-005", name: "Kumasi Tutors", phone: "+233 27 991 4533", email: "admin@kumasitutors.com", tags: ["Education"], status: "Inactive", lastActive: "2 days ago", assignedAgent: null, source: "WhatsApp", stage: "New", avatar: null },
-  { id: "cust-006", name: "Adjoa Frimpong", phone: "+233 24 556 7890", email: "adjoa.f@gmail.com", tags: ["Retail"], status: "Active", lastActive: "30 mins ago", assignedAgent: "Abena Osei", source: "WhatsApp", stage: "Qualified", avatar: null },
-  { id: "cust-007", name: "Cape Coast Textiles", phone: "+233 33 200 1100", email: "sales@cctextiles.com", tags: ["Enterprise", "Textiles"], status: "Active", lastActive: "5 hours ago", assignedAgent: "Kwame Darko", source: "SMS", stage: "Negotiation", avatar: null },
-  { id: "cust-008", name: "Yaw Agyemang", phone: "+233 20 111 2233", email: "yaw.a@outlook.com", tags: ["Freelancer"], status: "Active", lastActive: "1 day ago", assignedAgent: null, source: "WhatsApp", stage: "New", avatar: null },
-  { id: "cust-009", name: "Accra Pharmacy Ltd", phone: "+233 30 445 6677", email: "info@accrapharmacy.com", tags: ["Healthcare", "VIP"], status: "Active", lastActive: "20 mins ago", assignedAgent: "Kofi Asante", source: "SMS", stage: "Customer", avatar: null },
-  { id: "cust-010", name: "Efua Owusu", phone: "+233 27 888 9900", email: "efua.owusu@yahoo.com", tags: ["Retail"], status: "Churned", lastActive: "14 days ago", assignedAgent: null, source: "WhatsApp", stage: "Lost", avatar: null },
-  { id: "cust-011", name: "Tema Steel Works", phone: "+233 22 334 5566", email: "ops@temasteelworks.gh", tags: ["Enterprise", "Manufacturing"], status: "Active", lastActive: "4 hours ago", assignedAgent: "Kwame Darko", source: "Web chat", stage: "Enterprise lead", avatar: null },
-  { id: "cust-012", name: "Kweku Appiah", phone: "+233 50 112 3344", email: "kweku.appiah@mail.com", tags: ["Freelancer"], status: "Active", lastActive: "6 hours ago", assignedAgent: "Abena Osei", source: "SMS", stage: "Qualified", avatar: null },
-];
-
-export const customerSegments = [
-  { id: "seg-001", name: "High-Value Customers", description: "Customers with lifetime value > GHS 5,000", count: 124, color: "#10b981" },
-  { id: "seg-002", name: "At-Risk Churn", description: "Inactive for 7+ days with open issues", count: 38, color: "#ef4444" },
-  { id: "seg-003", name: "New This Month", description: "Customers acquired in the last 30 days", count: 186, color: "#6366f1" },
-  { id: "seg-004", name: "Enterprise Leads", description: "Organizations in enterprise pipeline", count: 22, color: "#f59e0b" },
-  { id: "seg-005", name: "WhatsApp Active", description: "Customers primarily using WhatsApp", count: 842, color: "#22c55e" },
-];
-
-export const customerTags = [
-  { id: "tag-001", name: "VIP", color: "#f59e0b", count: 45 },
-  { id: "tag-002", name: "Enterprise", color: "#6366f1", count: 22 },
-  { id: "tag-003", name: "Retail", color: "#10b981", count: 312 },
-  { id: "tag-004", name: "Support", color: "#ef4444", count: 67 },
-  { id: "tag-005", name: "Freelancer", color: "#8b5cf6", count: 128 },
-  { id: "tag-006", name: "Education", color: "#06b6d4", count: 54 },
-  { id: "tag-007", name: "Healthcare", color: "#ec4899", count: 41 },
-  { id: "tag-008", name: "F&B", color: "#f97316", count: 89 },
-  { id: "tag-009", name: "Logistics", color: "#14b8a6", count: 33 },
-  { id: "tag-010", name: "Bulk", color: "#a855f7", count: 76 },
-];
-
-// ── Conversations ────────────────────────────────────────────────────────
-export const conversations = [
-  {
-    id: "conv-001",
-    customer: "Ama Boateng",
-    customerId: "cust-001",
-    channel: "WhatsApp" as const,
-    status: "open" as const,
-    preview: "I want to upgrade to the business plan and connect my WhatsApp number.",
-    time: "9:42 AM",
-    unread: true,
-    assignedAgent: "Kofi Asante",
-    aiClassification: "Sales Inquiry",
-    priority: "high" as const,
-    messages: [
-      { id: "m1", role: "customer" as const, text: "Hello, can I upgrade to business today?", time: "9:30 AM" },
-      { id: "m2", role: "ai" as const, text: "Hi Ama! I'd be happy to help you with the upgrade. The Business plan includes unlimited contacts, team collaboration tools, and WhatsApp automation. Would you like me to walk you through the process?", time: "9:30 AM" },
-      { id: "m3", role: "customer" as const, text: "Yes please. I also want WhatsApp automation for orders.", time: "9:35 AM" },
-      { id: "m4", role: "ai" as const, text: "Great choice! WhatsApp automation is included in the Business plan. Let me connect you with our sales team to finalize the upgrade and set up your automation workflows.", time: "9:35 AM" },
-      { id: "m5", role: "agent" as const, text: "Hi Ama, this is Kofi from the sales team. I can help you upgrade right away. Let me send you the payment link.", time: "9:42 AM" },
-    ],
-    aiSuggestions: [
-      "I've sent the payment link to your WhatsApp. Please check and confirm once done.",
-      "Would you also like me to set up the order automation template for you?",
-      "Your upgrade will be active within 5 minutes of payment confirmation.",
-    ],
-    summary: "Customer wants to upgrade from Starter to Business plan. Interested in WhatsApp order automation. AI handled initial inquiry, escalated to sales agent Kofi Asante.",
-  },
-  {
-    id: "conv-002",
-    customer: "Kojo Mensah",
-    customerId: "cust-002",
-    channel: "SMS" as const,
-    status: "open" as const,
-    preview: "The AI assistant answered my customer but did not include the receipt.",
-    time: "10:18 AM",
-    unread: true,
-    assignedAgent: "Abena Osei",
-    aiClassification: "Support Issue",
-    priority: "medium" as const,
-    messages: [
-      { id: "m1", role: "customer" as const, text: "The receipt was not sent after payment.", time: "10:10 AM" },
-      { id: "m2", role: "ai" as const, text: "I'm sorry about that, Kojo. Let me check the transaction status for you. Can you provide the payment reference number?", time: "10:10 AM" },
-      { id: "m3", role: "customer" as const, text: "It's TXN-2026-0584. My customer paid via MoMo.", time: "10:15 AM" },
-      { id: "m4", role: "agent" as const, text: "I am checking the billing event and transaction status.", time: "10:18 AM" },
-    ],
-    aiSuggestions: [
-      "I've found the transaction. The receipt generation failed due to a timeout. I'm resending it now.",
-      "The receipt has been sent to the customer's phone number ending in 7788.",
-      "Would you like me to set up automatic receipt delivery for all MoMo payments?",
-    ],
-    summary: "Customer reporting missing receipt for MoMo payment TXN-2026-0584. AI identified the issue, agent Abena investigating.",
-  },
-  {
-    id: "conv-003",
-    customer: "Naa Logistics",
-    customerId: "cust-003",
-    channel: "WhatsApp" as const,
-    status: "open" as const,
-    preview: "Can your CRM manage multiple branches and assign support agents?",
-    time: "11:03 AM",
-    unread: false,
-    assignedAgent: "Kwame Darko",
-    aiClassification: "Enterprise Inquiry",
-    priority: "high" as const,
-    messages: [
-      { id: "m1", role: "customer" as const, text: "We have three branches. Can each branch see only its own tickets?", time: "10:50 AM" },
-      { id: "m2", role: "ai" as const, text: "Great question! Our Enterprise plan supports multi-branch management with department-level access controls. Each branch can have its own team with scoped visibility. Would you like to learn more?", time: "10:50 AM" },
-      { id: "m3", role: "customer" as const, text: "Yes. We need Accra, Kumasi, and Takoradi branches separated.", time: "10:55 AM" },
-      { id: "m4", role: "agent" as const, text: "Hi! I'm Kwame from Enterprise sales. I can set up a demo workspace with your 3 branches. When are you available for a 30-min walkthrough?", time: "11:03 AM" },
-    ],
-    aiSuggestions: [
-      "I've prepared a demo workspace with 3 branches: Accra, Kumasi, and Takoradi. Ready when you are.",
-      "Our Enterprise plan starts at GHS 149/month per branch. Would you like a custom quote?",
-      "I can schedule a demo for you. What day works best this week?",
-    ],
-    summary: "Enterprise prospect with 3 branches needs multi-location CRM. AI qualified as enterprise lead, escalated to Kwame Darko.",
-  },
-  {
-    id: "conv-004",
-    customer: "Bright Foods",
-    customerId: "cust-004",
-    channel: "SMS" as const,
-    status: "closed" as const,
-    preview: "Customer asked for invoice generation after placing a bulk order.",
-    time: "12:26 PM",
-    unread: false,
-    assignedAgent: "Kofi Asante",
-    aiClassification: "Invoice Request",
-    priority: "low" as const,
-    messages: [
-      { id: "m1", role: "customer" as const, text: "Can Funza create an invoice from this order?", time: "12:20 PM" },
-      { id: "m2", role: "ai" as const, text: "Yes! I can generate an invoice for your bulk order. Let me pull up the details and create it for you right away.", time: "12:20 PM" },
-      { id: "m3", role: "agent" as const, text: "Invoice INV-2026-0312 has been generated and sent to orders@brightfoods.gh.", time: "12:26 PM" },
-    ],
-    aiSuggestions: [],
-    summary: "Bulk order invoice request. Generated INV-2026-0312 and sent to customer.",
-  },
-  {
-    id: "conv-005",
-    customer: "Adjoa Frimpong",
-    customerId: "cust-006",
-    channel: "WhatsApp" as const,
-    status: "open" as const,
-    preview: "Asking about loyalty program and discount codes for repeat purchases.",
-    time: "1:15 PM",
-    unread: true,
-    assignedAgent: "Abena Osei",
-    aiClassification: "Product Inquiry",
-    priority: "medium" as const,
-    messages: [
-      { id: "m1", role: "customer" as const, text: "Do you have any loyalty discounts? I've been ordering every week.", time: "1:10 PM" },
-      { id: "m2", role: "ai" as const, text: "Thank you for being a loyal customer, Adjoa! 🎉 I can see you've made 12 orders in the last 3 months. Let me check what special offers are available for you.", time: "1:10 PM" },
-      { id: "m3", role: "customer" as const, text: "That would be great. I also referred two friends last month.", time: "1:13 PM" },
-      { id: "m4", role: "ai" as const, text: "That's wonderful! Let me connect you with our loyalty team to set up your VIP rewards. You'll get early access to deals and referral bonuses.", time: "1:15 PM" },
-    ],
-    aiSuggestions: [
-      "As a VIP customer with 12 orders, you qualify for our 15% loyalty discount. I'll apply it to your next order.",
-      "Your friend referrals earned you GHS 50 in credits. Would you like to use them now?",
-      "I'd love to invite you to our exclusive VIP WhatsApp group for early deals!",
-    ],
-    summary: "Repeat customer asking about loyalty rewards. 12 orders in 3 months, 2 referrals. AI qualifying for VIP program.",
-  },
-  {
-    id: "conv-006",
-    customer: "Accra Pharmacy Ltd",
-    customerId: "cust-009",
-    channel: "SMS" as const,
-    status: "open" as const,
-    preview: "Need help setting up automated prescription refill reminders.",
-    time: "2:30 PM",
-    unread: false,
-    assignedAgent: "Kofi Asante",
-    aiClassification: "Feature Request",
-    priority: "medium" as const,
-    messages: [
-      { id: "m1", role: "customer" as const, text: "We want to send automatic SMS reminders when prescriptions are due for refill.", time: "2:20 PM" },
-      { id: "m2", role: "ai" as const, text: "That's a great use case! Our automation engine can send scheduled SMS reminders based on prescription dates. I'll need some details about your workflow to set this up.", time: "2:22 PM" },
-      { id: "m3", role: "customer" as const, text: "Typically 3 days before the refill date. We have about 2,000 active prescriptions.", time: "2:28 PM" },
-      { id: "m4", role: "agent" as const, text: "I can help configure this. We'll set up a CSV import for your prescription data and create an automation rule for 3-day advance reminders.", time: "2:30 PM" },
-    ],
-    aiSuggestions: [
-      "I've drafted an automation template for prescription reminders. Would you like to review it?",
-      "For 2,000 prescriptions, you'll need approximately 2,000 SMS credits per cycle. Your current plan covers this.",
-      "Would you also like to add a follow-up message if they don't respond within 24 hours?",
-    ],
-    summary: "Pharmacy needs automated prescription refill reminders via SMS for 2,000 active prescriptions. 3-day advance notice.",
-  },
-];
-
-// ── Payments & Transactions ──────────────────────────────────────────────
-export const transactions = [
-  { id: "TXN-2026-0601", customer: "Ama Boateng", amount: "GHS 249.00", status: "successful" as const, channel: "MTN MoMo", date: "Jun 5, 2026", description: "Business Plan Upgrade" },
-  { id: "TXN-2026-0598", customer: "Naa Logistics", amount: "GHS 1,490.00", status: "successful" as const, channel: "Bank Transfer", date: "Jun 4, 2026", description: "Enterprise Annual Plan" },
-  { id: "TXN-2026-0595", customer: "Bright Foods", amount: "GHS 99.00", status: "successful" as const, channel: "Telecel Cash", date: "Jun 3, 2026", description: "Starter Plan Renewal" },
-  { id: "TXN-2026-0592", customer: "Adjoa Frimpong", amount: "GHS 49.00", status: "pending" as const, channel: "MTN MoMo", date: "Jun 3, 2026", description: "SME Plan Payment" },
-  { id: "TXN-2026-0588", customer: "Cape Coast Textiles", amount: "GHS 249.00", status: "successful" as const, channel: "AirtelTigo Cash", date: "Jun 2, 2026", description: "Business Plan" },
-  { id: "TXN-2026-0584", customer: "Kojo Mensah", amount: "GHS 99.00", status: "failed" as const, channel: "MTN MoMo", date: "Jun 1, 2026", description: "Starter Plan Renewal" },
-  { id: "TXN-2026-0580", customer: "Accra Pharmacy Ltd", amount: "GHS 249.00", status: "successful" as const, channel: "Bank Transfer", date: "May 31, 2026", description: "Business Plan Renewal" },
-  { id: "TXN-2026-0575", customer: "Tema Steel Works", amount: "GHS 1,490.00", status: "successful" as const, channel: "Bank Transfer", date: "May 30, 2026", description: "Enterprise Annual Plan" },
-  { id: "TXN-2026-0571", customer: "Kumasi Tutors", amount: "GHS 0.00", status: "successful" as const, channel: "Free Tier", date: "May 28, 2026", description: "Free Plan Activation" },
-  { id: "TXN-2026-0568", customer: "Yaw Agyemang", amount: "GHS 49.00", status: "pending" as const, channel: "MTN MoMo", date: "May 27, 2026", description: "SME Plan Payment" },
-];
-
-export const invoices = [
-  { id: "INV-2026-0312", customer: "Bright Foods", amount: "GHS 4,800.00", status: "Paid", dueDate: "Jun 15, 2026", issuedDate: "Jun 1, 2026" },
-  { id: "INV-2026-0298", customer: "Naa Logistics", amount: "GHS 12,500.00", status: "Sent", dueDate: "Jun 20, 2026", issuedDate: "May 28, 2026" },
-  { id: "INV-2026-0285", customer: "Accra Pharmacy Ltd", amount: "GHS 2,400.00", status: "Paid", dueDate: "Jun 10, 2026", issuedDate: "May 25, 2026" },
-  { id: "INV-2026-0271", customer: "Cape Coast Textiles", amount: "GHS 8,200.00", status: "Overdue", dueDate: "May 30, 2026", issuedDate: "May 15, 2026" },
-  { id: "INV-2026-0260", customer: "Tema Steel Works", amount: "GHS 15,800.00", status: "Paid", dueDate: "May 25, 2026", issuedDate: "May 10, 2026" },
-];
-
-export const receipts = [
-  { id: "REC-2026-0601", customer: "Ama Boateng", amount: "GHS 249.00", date: "Jun 5, 2026", invoiceId: null, paymentMethod: "MTN MoMo" },
-  { id: "REC-2026-0598", customer: "Naa Logistics", amount: "GHS 1,490.00", date: "Jun 4, 2026", invoiceId: "INV-2026-0298", paymentMethod: "Bank Transfer" },
-  { id: "REC-2026-0595", customer: "Bright Foods", amount: "GHS 99.00", date: "Jun 3, 2026", invoiceId: "INV-2026-0312", paymentMethod: "Telecel Cash" },
-  { id: "REC-2026-0588", customer: "Cape Coast Textiles", amount: "GHS 249.00", date: "Jun 2, 2026", invoiceId: null, paymentMethod: "AirtelTigo Cash" },
-  { id: "REC-2026-0580", customer: "Accra Pharmacy Ltd", amount: "GHS 249.00", date: "May 31, 2026", invoiceId: "INV-2026-0285", paymentMethod: "Bank Transfer" },
-];
-
-export const billingHistory = [
-  { id: "INV-1008", date: "May 10, 2026", plan: "Business", amount: "GHS 249", status: "Paid" },
-  { id: "INV-1007", date: "Apr 10, 2026", plan: "Business", amount: "GHS 249", status: "Paid" },
-  { id: "INV-1006", date: "Mar 10, 2026", plan: "Business", amount: "GHS 249", status: "Paid" },
-];
-
-export const subscriptionPlans = [
-  { name: "Free", price: "GHS 0", priceSuffix: "/month", current: false, features: ["50 contacts", "100 AI messages/month", "SMS support", "1 user seat"], color: "#94a3b8" },
-  { name: "Starter", price: "GHS 99", priceSuffix: "/month", current: false, features: ["500 contacts", "1,000 AI messages/month", "SMS + WhatsApp", "3 user seats", "Basic analytics"], color: "#6366f1" },
-  { name: "Business", price: "GHS 249", priceSuffix: "/month", current: true, features: ["5,000 contacts", "10,000 AI messages/month", "All channels", "10 user seats", "Advanced analytics", "API access", "Automations"], color: "#10b981" },
-  { name: "Enterprise", price: "GHS 499", priceSuffix: "/month", current: false, features: ["Unlimited contacts", "Unlimited AI messages", "All channels", "Unlimited seats", "Enterprise analytics", "SSO + Audit logs", "Dedicated support", "Custom integrations"], color: "#f59e0b" },
-];
-
-// ── Team ─────────────────────────────────────────────────────────────────
-export const teamMembers = [
-  { id: "user-001", name: "Joel Ekeng", email: "joel@funzacrm.com", role: "Owner" as const, status: "Online" as const, lastActive: "Now", avatar: null },
-  { id: "user-002", name: "Kofi Asante", email: "kofi@funzacrm.com", role: "Admin" as const, status: "Online" as const, lastActive: "Now", avatar: null },
-  { id: "user-003", name: "Abena Osei", email: "abena@funzacrm.com", role: "Manager" as const, status: "Online" as const, lastActive: "5 mins ago", avatar: null },
-  { id: "user-004", name: "Kwame Darko", email: "kwame@funzacrm.com", role: "Agent" as const, status: "Away" as const, lastActive: "1 hour ago", avatar: null },
-  { id: "user-005", name: "Esi Adjei", email: "esi@funzacrm.com", role: "Agent" as const, status: "Offline" as const, lastActive: "3 hours ago", avatar: null },
-  { id: "user-006", name: "Yaw Boateng", email: "yaw@funzacrm.com", role: "Agent" as const, status: "Online" as const, lastActive: "Now", avatar: null },
-  { id: "user-007", name: "Akua Mensah", email: "akua@funzacrm.com", role: "Viewer" as const, status: "Offline" as const, lastActive: "1 day ago", avatar: null },
-];
 
 export const teamRoles = [
   {
@@ -334,11 +94,6 @@ export const teamRoles = [
   },
 ];
 
-export const teams = [
-  { id: "team-001", name: "Sales Team", members: ["user-002", "user-004"], lead: "user-002", description: "Handles inbound leads and enterprise sales" },
-  { id: "team-002", name: "Support Team", members: ["user-003", "user-005", "user-006"], lead: "user-003", description: "Customer support and issue resolution" },
-  { id: "team-003", name: "Operations", members: ["user-001", "user-007"], lead: "user-001", description: "Business operations and reporting" },
-];
 
 // ── AI Center ────────────────────────────────────────────────────────────
 export const aiAssistantConfig = {
@@ -487,6 +242,12 @@ export const onboardingSteps = [
   { label: "Launch inbox", detail: "Route SMS, WhatsApp, and web messages into one workspace.", done: false },
 ];
 
+export const billingHistory = [
+  { id: "INV-1008", date: "May 10, 2026", plan: "Business", amount: "GHS 249", status: "Paid" },
+  { id: "INV-1007", date: "Apr 10, 2026", plan: "Business", amount: "GHS 249", status: "Paid" },
+  { id: "INV-1006", date: "Mar 10, 2026", plan: "Business", amount: "GHS 249", status: "Paid" },
+];
+
 // ── Notifications ────────────────────────────────────────────────────────
 export const notifications = [
   { id: "note-001", title: "Business verification pending", detail: "2 accounts need document review.", tone: "amber" as const, time: "10 mins ago", read: false },
@@ -494,12 +255,6 @@ export const notifications = [
   { id: "note-003", title: "Payment received", detail: "GHS 249 from Ama Boateng - Business Plan upgrade.", tone: "blue" as const, time: "2 hours ago", read: true },
   { id: "note-004", title: "AI accuracy improved", detail: "Resolution rate increased to 78.5% this week.", tone: "green" as const, time: "5 hours ago", read: true },
   { id: "note-005", title: "Failed payment", detail: "Kojo Mensah's MoMo payment of GHS 99 failed.", tone: "red" as const, time: "1 day ago", read: true },
-];
-
-export const authScreens = [
-  { id: "login", title: "Sign in", subtitle: "Access the CRM workspace", primaryAction: "Sign in", fields: ["Email address", "Password"] },
-  { id: "register", title: "Create business account", subtitle: "Start onboarding a company workspace", primaryAction: "Create account", fields: ["Full name", "Business name", "Email address", "Password"] },
-  { id: "forgot", title: "Reset password", subtitle: "Send a recovery link to the account owner", primaryAction: "Send reset link", fields: ["Email address"] },
 ];
 
 // ── Super Admin ──────────────────────────────────────────────────────────

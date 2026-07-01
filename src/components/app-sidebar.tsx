@@ -7,6 +7,7 @@ import { dashboardModules } from "@/config/modules";
 import { canAccessModule } from "@/features/access/module-access";
 import { useWorkspace, type WorkspaceType } from "@/lib/workspace-context";
 
+
 import {
   Sidebar,
   SidebarContent,
@@ -25,7 +26,6 @@ import {
   UsersRound,
   Inbox,
   MessageCircle,
-  Bot,
   Archive,
   BookOpen,
   FileText,
@@ -36,15 +36,12 @@ import {
   ShieldCheck,
   Users,
   Building2,
-  Sparkles,
-  Activity,
-  Key,
-  Lock,
-  Plug,
   ChevronRight,
   Layers,
   Smartphone,
 } from "lucide-react";
+
+import { Profile } from "./profile";
 
 // ── Navigation definition ──────────────────────────────────────────────
 type NavItem = {
@@ -185,26 +182,6 @@ const navSections: NavSection[] = [
         icon: Settings2,
         url: "/settings",
       },
-      {
-        id: "integrations",
-        label: "Integrations",
-        icon: Plug,
-        url: "/settings",
-      },
-      {
-        id: "security",
-        label: "Security",
-        icon: Lock,
-        url: "/settings",
-        hideFor: ["personal"],
-      },
-      {
-        id: "api-keys",
-        label: "API Keys",
-        icon: Key,
-        url: "/settings",
-        hideFor: ["personal"],
-      },
     ],
   },
 ];
@@ -239,10 +216,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* Header */}
       <SidebarHeader className="px-4 pt-5 pb-4">
         <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-funza-primary text-white shadow-sm transition-transform duration-200 group-hover:scale-105">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col px-4">
             <span className="text-[15px] font-semibold text-funza-text">
               Funza AI
             </span>
@@ -328,19 +302,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       {/* Footer */}
       <SidebarFooter className="border-t border-sidebar-border px-3 py-3">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              className="h-10 rounded-lg px-3 text-funza-text-secondary hover:bg-sidebar-accent hover:text-funza-text"
-              render={<Link href="/profile" />}
-            >
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-funza-primary/10 text-[11px] font-bold text-funza-primary">
-                JE
-              </div>
-              <span className="text-[13px] font-medium">Joel Ekeng</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <Profile />
       </SidebarFooter>
 
       <SidebarRail />

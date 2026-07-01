@@ -159,7 +159,7 @@ function SidebarSection({
 }) {
   return (
     <SidebarGroup className="mb-6">
-      <div className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9a9a9a]">
+      <div className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         {title}
       </div>
 
@@ -176,8 +176,8 @@ function SidebarSection({
                   group h-12 rounded-2xl px-4 transition-all duration-200
                   ${
                     isActive
-                      ? "bg-[#ff6b2c] text-white shadow-sm hover:bg-[#f85f1d]"
-                      : "text-[#5e5e5e] hover:bg-white hover:text-[#111111]"
+                      ? "bg-orange-500 text-white shadow-sm hover:bg-orange-600"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }
                 `}
               >
@@ -191,7 +191,7 @@ function SidebarSection({
                       className={
                         isActive
                           ? "text-white"
-                          : "text-[#7d7d7d]"
+                          : "text-muted-foreground"
                       }
                     />
 
@@ -207,7 +207,7 @@ function SidebarSection({
                       ${
                         isActive
                           ? "text-white opacity-100"
-                          : "opacity-0 group-hover:opacity-100 text-[#b0b0b0]"
+                          : "opacity-0 group-hover:opacity-100 text-muted-foreground"
                       }
                     `}
                   />
@@ -228,23 +228,23 @@ export function AppSidebar({
 
   return (
     <Sidebar
-      className="border-r-0 bg-[#f7f7f7]"
+      className="border-r-0 bg-sidebar"
       {...props}
     >
       {/* HEADER */}
       <SidebarHeader className="px-5 pt-6 pb-5">
-        <div className="rounded-[28px] border border-[#ededed] bg-white p-4 shadow-sm">
+        <div className="rounded-[28px] border border-border bg-card p-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ff6b2c] text-white shadow-sm">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500 text-white shadow-sm">
               <Building2 className="h-5 w-5" />
             </div>
 
             <div className="flex flex-col">
-              <span className="text-[15px] font-semibold text-[#111111]">
+              <span className="text-[15px] font-semibold text-foreground">
                 Funza CRM
               </span>
 
-              <span className="text-xs text-[#8b8b8b]">
+              <span className="text-xs text-muted-foreground">
                 Super Admin
               </span>
             </div>
@@ -252,22 +252,22 @@ export function AppSidebar({
 
           {/* PLATFORM STATS */}
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-[#fafafa] p-3">
-              <p className="text-[11px] text-[#8d8d8d]">
+            <div className="rounded-2xl bg-muted p-3">
+              <p className="text-[11px] text-muted-foreground">
                 Organizations
               </p>
 
-              <h3 className="mt-1 text-lg font-semibold text-[#111111]">
+              <h3 className="mt-1 text-lg font-semibold text-foreground">
                 248
               </h3>
             </div>
 
-            <div className="rounded-2xl bg-[#fafafa] p-3">
-              <p className="text-[11px] text-[#8d8d8d]">
+            <div className="rounded-2xl bg-muted p-3">
+              <p className="text-[11px] text-muted-foreground">
                 Active Users
               </p>
 
-              <h3 className="mt-1 text-lg font-semibold text-[#111111]">
+              <h3 className="mt-1 text-lg font-semibold text-foreground">
                 12.4k
               </h3>
             </div>
@@ -309,14 +309,14 @@ export function AppSidebar({
 
         {/* GENERAL */}
         <SidebarGroup className="mt-4">
-          <div className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9a9a9a]">
+          <div className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             General
           </div>
 
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                className="h-12 rounded-2xl px-4 text-[#5e5e5e] hover:bg-white"
+                className="h-12 rounded-2xl px-4 text-muted-foreground hover:bg-muted"
               >
                 <Link
                   href="/profile"
@@ -324,7 +324,7 @@ export function AppSidebar({
                 >
                   <UserRound
                     size={19}
-                    className="text-[#7d7d7d]"
+                    className="text-muted-foreground"
                   />
 
                   <span className="text-[14px] font-medium">
@@ -336,7 +336,7 @@ export function AppSidebar({
 
             <SidebarMenuItem>
               <SidebarMenuButton
-                className="h-12 rounded-2xl px-4 text-[#5e5e5e] hover:bg-white"
+                className="h-12 rounded-2xl px-4 text-muted-foreground hover:bg-muted"
               >
                 <Link
                   href="/settings"
@@ -344,7 +344,7 @@ export function AppSidebar({
                 >
                   <Settings
                     size={19}
-                    className="text-[#7d7d7d]"
+                    className="text-muted-foreground"
                   />
 
                   <span className="text-[14px] font-medium">
@@ -356,7 +356,7 @@ export function AppSidebar({
 
             <SidebarMenuItem>
               <SidebarMenuButton
-                className="h-12 rounded-2xl px-4 text-[#5e5e5e] hover:bg-white"
+                className="h-12 rounded-2xl px-4 text-muted-foreground hover:bg-muted"
               >
                 <Link
                   href="/support"
@@ -364,7 +364,7 @@ export function AppSidebar({
                 >
                   <LifeBuoy
                     size={19}
-                    className="text-[#7d7d7d]"
+                    className="text-muted-foreground"
                   />
 
                   <span className="text-[14px] font-medium">
@@ -377,7 +377,7 @@ export function AppSidebar({
             {/* LOGOUT */}
             <SidebarMenuItem className="pt-5">
               <SidebarMenuButton
-                className="h-12 rounded-2xl border border-[#f1f1f1] bg-white px-4 text-[#ff6b2c] hover:bg-white"
+                className="h-12 rounded-2xl border border-border bg-card px-4 text-orange-500 hover:bg-muted"
               >
                 <Link
                   href="/logout"

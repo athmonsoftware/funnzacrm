@@ -13,7 +13,6 @@ import {
   StickyNote,
   UserRound,
 } from "lucide-react";
-// import { conversations, customers } from "@/lib/mock-data";
 import { Badge, Button, Card } from "@/components/ui";
 
 type Message = {
