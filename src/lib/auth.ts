@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { Pool } from "pg"
 import { emailOTP } from "better-auth/plugins"
 import { sendOtpEmail } from "@/lib/email"
+import { bearer } from "better-auth/plugins";
 
 export const auth = betterAuth({
   database: new Pool({
@@ -23,6 +24,11 @@ export const auth = betterAuth({
             async sendVerificationOTP({ email, otp, type }) {
                 await sendOtpEmail({ email, otp, type })
             },
-        })
-    ]
+        }),
+        bearer()
+  ],
+  session: {
+    expiresIn: 60 * 60 * 24 * 2, // 2 days
+    updateAge: 60 * 60 * 6, // Refresh every 6 hours
+  }
 });

@@ -7,6 +7,8 @@ import { Button, Card, SectionHeader } from "@/components/ui";
 export default function ContactsUploadPage() {
   const [contactsFile, setContactsFile] = useState<File | null>(null);
 
+  const token = localStorage.getItem("bearer_token");
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactsFile) return;
@@ -15,7 +17,11 @@ export default function ContactsUploadPage() {
     formData.append("file", contactsFile);
 
     await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contacts/upload`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       method: "POST",
+      mode: "cors",
       body: formData,
     });
 

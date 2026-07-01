@@ -40,16 +40,34 @@ export function LoginForm({
   } = useForm<LoginFormValues>()
 
   async function onSubmit(data: LoginFormValues) {
-    const { error } = await signIn.email({
-      email: data.email,
-      password: data.password,
-    })
-    if (error) {
-      toast.error(error.message ?? "Invalid email or password.")
-      return
+    try{
+      const { error } = await signIn.email({
+        email: data.email,
+        password: data.password,
+      },{
+        onSuccess: (ctx) => {
+          const authToken = ctx.response.headers.get("set-auth-token")
+          if (authToken) {
+            localStorage.setItem("bearer_token", authToken);
+          }
+        },
+        onError: (ctx) => {
+          toast.error(ctx.error.message ?? "Invalid email or password.")
+          if (ctx.response.status === 401) {
+            localStorage.removeItem("bearer_token");
+            window.location.href = "/login";
+          }
+        }
+      })
+      toast.success("Welcome back!")
+      if (error) {
+        toast.error(error.message ?? "Invalid email or password.")
+        return
+      }
+      router.push("/")
+    } catch (error) {
+      toast.error("An error occurred while logging in.")
     }
-    toast.success("Welcome back!")
-    router.push("/")
   }
 
   return (
@@ -77,7 +95,9 @@ export function LoginForm({
                   Login with Apple
                 </Button>
                 <Button 
-                onClick={() => signInWithGoogle()}
+                onClick={() => {
+                  signInWithGoogle()
+                }}
                 variant="outline" type="button" className="h-11 text-sm font-semibold">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path
