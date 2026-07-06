@@ -39,31 +39,17 @@ export function LoginForm({
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>()
 
-  async function onSubmit(data: LoginFormValues) {
+  async function onSubmit(signInData: LoginFormValues) {
     try{
       const { error } = await signIn.email({
-        email: data.email,
-        password: data.password,
-      },{
-        onSuccess: (ctx) => {
-          const authToken = ctx.response.headers.get("set-auth-token")
-          if (authToken) {
-            localStorage.setItem("bearer_token", authToken);
-          }
-        },
-        onError: (ctx) => {
-          toast.error(ctx.error.message ?? "Invalid email or password.")
-          if (ctx.response.status === 401) {
-            localStorage.removeItem("bearer_token");
-            window.location.href = "/login";
-          }
-        }
+        email: signInData.email,
+        password: signInData.password,
       })
-      toast.success("Welcome back!")
       if (error) {
         toast.error(error.message ?? "Invalid email or password.")
         return
       }
+      toast.success("Welcome back!")
       router.push("/")
     } catch (error) {
       toast.error("An error occurred while logging in.")

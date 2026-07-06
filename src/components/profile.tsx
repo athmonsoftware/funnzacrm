@@ -39,7 +39,10 @@ export function Profile() {
       <DropdownMenuContent className="w-40" align="start">
         <DropdownMenuGroup>
           <DropdownMenuItem
-          onClick={() => authClient.signOut()}
+          onClick={async () => {
+            await authClient.signOut();
+            window.location.href = "/login";
+          }}
           >
             Logout
           </DropdownMenuItem>
