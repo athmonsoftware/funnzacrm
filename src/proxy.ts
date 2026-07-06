@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { getSessionCookie } from "better-auth/cookies"
 
 export default async function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    const session = await auth.api.getSession({
-        headers: await headers(),
-    });
+    const session = getSessionCookie(req)
+
+    // const session = await auth.api.getSession({
+    //     headers: await headers(),
+    // });
 
     // Redirect authenticated users away from auth pages
     if (session && ["/login", "/signup"].includes(pathname)) {
